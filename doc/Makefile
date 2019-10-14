@@ -124,6 +124,7 @@ MANPAGES_3_MD_DUMMY_EXP =
 MANPAGES_1_MD_DUMMY_EXP =
 
 ifeq ($(BUILD_RPMEM),y)
+# librpmem
 MANPAGES_7_MD += librpmem/librpmem.7.md
 MANPAGES_3_MD += librpmem/rpmem_create.3.md
 MANPAGES_3_MD += librpmem/rpmem_persist.3.md
@@ -132,6 +133,12 @@ MANPAGES_3_DUMMY += rpmem_open.3 rpmem_set_attr.3 rpmem_close.3 \
 		    rpmem_read.3 rpmem_remove.3 rpmem_check_version.3 \
 		    rpmem_errormsg.3 rpmem_deep_persist.3 rpmem_flush.3 \
 		    rpmem_drain.3
+# librpma
+MANPAGES_7_MD += librpma/librpma.7.md
+MANPAGES_3_MD += librpma/rpma_config_new.3.md
+MANPAGES_3_MD += librpma/rpma_domain_new.3.md
+MANPAGES_3_DUMMY += rpma_config_delete.3 rpma_config_set_addr.3 rpma_config_set_service.3 \
+		    rpma_domain_delete.3
 endif
 
 ifeq ($(NDCTL_ENABLE),y)
