@@ -31,7 +31,7 @@
  */
 
 /*
- * librpma.h -- definitions of librpma entry points (EXPERIMENTAL)
+ * librpma/msg.h -- definitions of librpma msg entry points (EXPERIMENTAL)
  *
  * This library provides low-level support for remote access to persistent
  * memory utilizing RDMA-capable RNICs.
@@ -39,10 +39,36 @@
  * See librpma(7) for details.
  */
 
-#ifndef LIBRPMA_H
-#define LIBRPMA_H 1
+#ifndef LIBRPMA_MSG_H
+#define LIBRPMA_MSG_H 1
 
-#include <librpma/msg.h>
-#include <librpma/rma.h>
+#include <stddef.h>
+#include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <librpma/base.h>
+
+#define RPMA_MSG_SEND	(1 << 0)
+#define RPMA_MSG_RECV	(1 << 1)
+
+struct rpma_msg;
+
+int rpma_msg_new(struct rpma_ctx *ctx, size_t length, int usage, struct rpma_msg **msg);
+
+int rpma_msg_get_ptr(struct rpma_msg *msg, void **ptr);
+
+int rpma_msg_delete(struct rpma_msg *msg);
+
+int rpma_conn_send(struct rpma_conn *conn, struct rpma_msg *send);
+
+int rpma_conn_recv_post(struct rpma_conn *conn, struct rpma_msg *recv);
+
+int rpma_conn_recv(struct rpma_conn *conn, struct rpma_msg **recv);
+
+#ifdef __cplusplus
+}
+#endif
 #endif	/* librpma.h */

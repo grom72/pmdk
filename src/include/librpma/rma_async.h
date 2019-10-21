@@ -31,7 +31,7 @@
  */
 
 /*
- * librpma.h -- definitions of librpma entry points (EXPERIMENTAL)
+ * librpma/rma.h -- base definitions of librpma RMA entry points (EXPERIMENTAL)
  *
  * This library provides low-level support for remote access to persistent
  * memory utilizing RDMA-capable RNICs.
@@ -39,10 +39,41 @@
  * See librpma(7) for details.
  */
 
-#ifndef LIBRPMA_H
-#define LIBRPMA_H 1
+#ifndef LIBRPMA_RMA_H
+#define LIBRPMA_RMA_H 1
 
-#include <librpma/msg.h>
-#include <librpma/rma.h>
+#include <stddef.h>
+#include <stdint.h>
 
-#endif	/* librpma.h */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <librpma/base.h>
+#include <librpma/mr.h>
+
+/* remote read */
+int rpma_conn_read_async(struct rpma_conn *conn,
+		struct rpma_mr *dst, size_t dst_off,
+		struct rpma_rmr *src, size_t src_off, size_t length);
+
+int rpma_conn_read_wait(struct rpma_conn *conn, struct rpma_mr *dst);
+
+/* remote write */
+
+#define RPMA_WRITE_RELEASE_SRC (1 << 0)
+
+int rpma_conn_write_async(struct rpma_conn *conn,
+		struct rpma_rmr *dst, size_t dst_off,
+		struct rpma_mr *src, size_t src_off, size_t length, int flags);
+
+/* remote commands commit */
+
+int rpma_conn_commit_async(struct rpma_conn *conn);
+
+int rpma_conn_commit_wait(struct rpma_conn *conn);
+
+#ifdef __cplusplus
+}
+#endif
+#endif	/* librpma/base.h */
