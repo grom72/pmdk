@@ -31,102 +31,99 @@
  */
 
 /*
- * manpage_server.c -- example from librpma manpage
+ * manpage_conn.c -- example from librpma manpage (establishing a connection)
  */
 
 #include <stdlib.h>
 #include <sys/param.h>
 
-#include <librpma.h>
+#include <librpma/base.h>
 
 #include "manpage_common.h"
+
+/*
+ * Client side:
+ * 1. Prepares rpma_config pointing the server (address and service)
+ * 2. Creates rpma_ctx using the rpma_config
+ * 3. Creates a new rpma_conn inside the rpma_ctx
+ * 4. Establishes the rpma_conn connection
+ * 5. Waits for 5 seconds before shutting down the connection
+ *
+ * Server side:
+ * 1. Prepares rpma_config pointing where the server will be listening for the
+ * incoming connections (address and service)
+ * 2. Creates rpma_ctx using the rpma_config
+ * 3. Starts listening for the incoming connections
+ * 4. Creates a new rpma_conn inside the rpma_ctx
+ * 5. Accepts the rpma_conn
+ * 6. Waits for the rpma_conn to shutdown
+ */
 
 int
 main(int argc, char *argv[])
 {
 	const char *addr, *service;
-	parse_args(argc, argv, &addr, &service);
+	int is_server = UNDEFINED;
+	parse_args(argc, argv, &addr, &service, &is_server);
 
-	/* setup the domain */
+	/* prepare rpma_config and create the RPMA context */
 	struct rpma_config *cfg;
-	struct rpma_domain *dom;
+	struct rpma_ctx *ctx;
 	if (rpma_config_new(&cfg) != RPMA_E_OK)
 		exit(1);
 
 	rpma_config_set_addr(cfg, addr);
 	rpma_config_set_service(cfg, service);
 
-	if (rpma_domain_new(cfg, &dom) != RPMA_E_OK)
-		goto err_domain;
+	if (rpma_ctx_new(cfg, &ctx) != RPMA_E_OK)
+		goto err_ctx;
 
-	/* prepare the memory regions for RMA and messaging */
-	struct rpma_mr *pool_mr;
-	struct rpma_mr *msg_mr;
-
-	size_t pool_size = roundup(POOL_SIZE, ALIGNMENT);
-	size_t msg_size = roundup(sizeof(struct rpma_mr_packed), ALIGNMENT);
-
-	void *pool = alloc_memory(pool_size + msg_size);
-	struct rpma_mr_packed *msg = (struct rpma_mr_packed *)((char *)pool + pool_size);
-
-	if (rpma_mr_new(dom, pool, pool_size, RPMA_MR_REMOTE_WRITE,
-			&pool_mr) != RPMA_E_OK)
-		goto err_pool_mr;
-
-	if (rpma_mr_new(dom, msg, msg_size, RPMA_MR_SEND,
-			&msg_mr) != RPMA_E_OK)
-		goto err_msg_mr;
-
-	/* prepare the message describing the local memory pool */
-	size_t real_msg_size = msg_size;
-	if (rpma_mr_pack(pool_mr, msg, &real_msg_size) != RPMA_E_OK)
-		goto err_rmr;
+	struct rpma_conn *conn;
+	if (is_server) {
+		/* start listening for the incoming connections */
+		if (rpma_listen(ctx) != RPMA_E_OK)
+			goto err_listen;
+	}
 
 	/* create the connection */
-	struct rpma_conn *conn;
-	if (rpma_listen(dom) != RPMA_E_OK)
-		goto err_listen;
-
-	if (rpma_conn_new(dom, &conn) != RPMA_E_OK)
+	if (rpma_conn_new(ctx, &conn) != RPMA_E_OK)
 		goto err_conn;
 
-	if (rpma_conn_accept(conn) != RPMA_E_OK)
-		goto err_accept;
+	if (is_server) {
+		/* accept the incoming connection */
+		if (rpma_conn_accept(conn) != RPMA_E_OK)
+			goto err_accept;
+	} else {
+		/* connect to the server */
+		if (rpma_conn_connect(conn) != RPMA_E_OK)
+			goto err_connect;
+	}
 
-	/* send the message to the client */
-	if (rpma_conn_send(conn, msg_mr) != RPMA_E_OK)
-		goto err_send;
-
-	/* wait for the connection shutdown */
-	if (rpma_conn_wait_for_shutdown(conn) != RPMA_E_OK)
-		goto err_wait;
+	if (is_server) {
+		/* wait for the connection shutdown */
+		if (rpma_conn_wait_for_shutdown(conn) != RPMA_E_OK)
+			goto err_wait;
+	} else {
+		printf("Wait for 5 seconds...\n");
+		sleep(5);
+	}
 
 	rpma_conn_delete(conn);
-	rpma_mr_delete(msg_mr);
-	rpma_mr_delete(pool_mr);
-	free(pool);
-	rpma_domain_delete(dom);
+	rpma_ctx_delete(ctx);
 	rpma_config_delete(cfg);
 
 	return 0;
 
 err_wait:
-err_send:
 err_accept:
+err_connect:
 	rpma_conn_delete(conn);
 
 err_conn:
 err_listen:
-err_rmr:
-	rpma_mr_delete(msg_mr);
+	rpma_ctx_delete(ctx);
 
-err_msg_mr:
-	rpma_mr_delete(pool_mr);
-
-err_pool_mr:
-	free(pool);
-	rpma_domain_delete(dom);
-
-err_domain:
+err_ctx:
 	rpma_config_delete(cfg);
+	return 1;
 }

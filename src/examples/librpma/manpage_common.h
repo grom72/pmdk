@@ -41,7 +41,10 @@
 
 #define POOL_SIZE (32 * 1024 * 1024)
 
-void parse_args(int argc, char *argv[], const char **addr, const char **service);
+#define UNDEFINED (-1)
+
+void parse_args(int argc, char *argv[], const char **addr, const char **service,
+		int *is_server);
 
 void *alloc_memory(size_t size);
 

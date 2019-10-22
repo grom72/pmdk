@@ -37,7 +37,7 @@ TOP := ../../..
 include $(TOP)/src/common.inc
 
 ifeq ($(BUILD_RPMEM), y)
-PROGS = manpage_client manpage_server
+PROGS = manpage_conn
 
 LIBS = -lrpmem -pthread
 else
@@ -46,5 +46,4 @@ endif
 
 include ../Makefile.inc
 
-manpage_client: manpage_common.o manpage_client.o
-manpage_server: manpage_common.o manpage_server.o
+manpage_conn: manpage_common.o manpage_conn.o

@@ -43,15 +43,21 @@
 #include "manpage_common.h"
 
 void
-parse_args(int argc, char *argv[], const char **addr, const char **service)
+parse_args(int argc, char *argv[], const char **addr, const char **service,
+		int *is_server)
 {
 	if (argc < 3) {
-		fprintf(stderr, "usage:\t%s <addr> <service>\n", argv[0]);
+		fprintf(stderr, "usage:\t%s <addr> <service> (<is_server>)\n",
+				argv[0]);
 		exit(1);
 	}
 
 	*addr = argv[1];
 	*service = argv[2];
+	if (argc == 4)
+		*is_server = atoi(argv[3]);
+	else
+		*is_server = UNDEFINED;
 }
 
 void *
