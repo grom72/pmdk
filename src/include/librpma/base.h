@@ -63,7 +63,7 @@ int rpma_config_set_addr(struct rpma_config *cfg, const char *addr);
 
 int rpma_config_set_service(struct rpma_config *cfg, const char *service);
 
-int rpma_config_delete(struct rpma_config *cfg);
+int rpma_config_delete(struct rpma_config **cfg);
 
 /* context setup */
 
@@ -71,7 +71,7 @@ struct rpma_ctx;
 
 int rpma_ctx_new(struct rpma_config *cfg, struct rpma_ctx **ctx);
 
-int rpma_ctx_delete(struct rpma_ctx *ctx);
+int rpma_ctx_delete(struct rpma_ctx **ctx);
 
 /* connection setup */
 
@@ -81,15 +81,13 @@ int rpma_listen(struct rpma_ctx *ctx);
 
 int rpma_conn_new(struct rpma_ctx *ctx, struct rpma_conn **conn);
 
-int rpma_conn_cq(struct rpma_conn *conn);
-
 int rpma_conn_wait_for_shutdown(struct rpma_conn *conn);
 
 int rpma_conn_accept(struct rpma_conn *conn);
 
 int rpma_conn_connect(struct rpma_conn *conn);
 
-int rpma_conn_delete(struct rpma_conn *conn);
+int rpma_conn_delete(struct rpma_conn **conn);
 
 /* error handling */
 

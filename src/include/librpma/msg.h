@@ -60,7 +60,7 @@ int rpma_msg_new(struct rpma_ctx *ctx, size_t length, int usage, struct rpma_msg
 
 int rpma_msg_get_ptr(struct rpma_msg *msg, void **ptr);
 
-int rpma_msg_delete(struct rpma_msg *msg);
+int rpma_msg_delete(struct rpma_msg **msg);
 
 int rpma_conn_send(struct rpma_conn *conn, struct rpma_msg *send);
 

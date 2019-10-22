@@ -49,40 +49,35 @@
 extern "C" {
 #endif
 
-/* memory region setup */
+/* local memory region */
 
-struct rpma_mr; /* local memory region */
-struct rpma_rmr; /* remote memory region */
+struct rpma_lmr;
 
 #define RPMA_MR_READ_SRC	(1 << 0)
 #define RPMA_MR_READ_DST	(1 << 1)
 #define RPMA_MR_WRITE_SRC	(1 << 2)
 #define RPMA_MR_WRITE_DST	(1 << 3)
 
-int rpma_mr_new(struct rpma_ctx *ctx, void *ptr, size_t size, int usage,
-		struct rpma_mr **mr);
+int rpma_lmr_new(struct rpma_ctx *ctx, void *ptr, size_t size, int usage,
+		struct rpma_lmr **lmr);
 
-int rpma_mr_get_ptr(struct rpma_mr *mr, void **ptr);
+int rpma_lmr_get_ptr(struct rpma_lmr *lmr, void **ptr);
 
-int rpma_mr_get_size(struct rpma_mr *mr, size_t *size);
+int rpma_lmr_get_size(struct rpma_lmr *lmr, size_t *size);
 
-int rpma_mr_delete(struct rpma_mr *mr);
+int rpma_lmr_get_id(struct rpma_lmr *lmr, void *id, size_t *id_size);
+
+int rpma_lmr_delete(struct rpma_lmr **lmr);
+
+/* remote memory region */
+
+struct rpma_rmr;
+
+int rpma_rmr_new(struct rpma_ctx *ctx, void *id, size_t id_size, struct rpma_rmr **rmr);
 
 int rpma_rmr_get_size(struct rpma_rmr *rmr, size_t *size);
 
-int rpma_rmr_delete(struct rpma_rmr *rmr);
-
-/* packing / unpacking memory regions */
-
-struct rpma_mr_packed { /* memory region packed for transfer time */
-	uint64_t raddr;
-	uint64_t rkey;
-	size_t size;
-};
-
-int rpma_mr_pack(struct rpma_mr *mr, struct rpma_mr_packed *packed, size_t *size);
-
-int rpma_rmr_unpack_new(struct rpma_ctx *ctx, struct rpma_mr_packed *packed, size_t size, struct rpma_rmr **rmr);
+int rpma_rmr_delete(struct rpma_rmr **rmr);
 
 #ifdef __cplusplus
 }
