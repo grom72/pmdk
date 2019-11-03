@@ -37,39 +37,40 @@
 #include "comm_client.h"
 
 static int
-ml_monitor(void *argc) // the message log monitor
+on_recive(void *argc) // RECV(R,W) pair from the server
 {
-	while (!exiting) {
-		if (ML.W != ML.R) {
-			// get stdout lock
-			// printf messages
-			// unlock stdout
-			ML.R = ML.W;
-		}
-		// sleep(timeout);
+	if (!exiting) {
+		// break the loop
+		return;
 	}
+
+	// READ (R, W-R) -> local ML
+	// ML.W = W
+	// SEND (ACK)
+	// printf messages
 }
 
 static void
-cs_monitor()
+notify_ack()
 {
-	while (!exiting) {
-		if (CS[x] == MSG_DONE) // monitor local CS
-			break;
-	}
+	wait_for_notify = false;
 }
 
 static void
 send_messages()
 {
-	while(!exiting) {
+	if (!exiting && !wait_for_notify) {
 		scanf(""); // to the message source buffer
 		if (msg == "exit") {
 			// set exiting
 			// send bye bye message
 			continue;
 		}
-		// atomic write to CS[x] on the server
+		wait_for_notify = true;
+		// write the message (commit)
+		// commit
+		// atomic write to CV[x] status
+		// commit + notify
 		// CS monitor
 	}
 }
@@ -99,20 +100,21 @@ int
 main(int argc, char *argv[])
 {
 	// mmap the message log - ML
-	// mmap the client status cell - CS
-	// register the client status
+	// mmap the client vector row - CV
+	// register the client vector row
 	// register the message log
 	// spawn ML monitor thread
 
 	// spawn the EQ monitor thread
 	// connect
 	// recv the hello message
-	// - client status memory region on the server CS[x]
+	// - client status memory region on the server CV[x]
 	// send the hello message ACK
-	// - the client's message source buffer
-	// - the client's message log (ML)
 
-	// send the messages
+	// register on_timeout callback -> send the messages
+	// register on_notify_ack callback
+	// register on_recv callback
+	// CQ loop
 
 	// join the EQ monitor thread
 	// join the ML monitor thread

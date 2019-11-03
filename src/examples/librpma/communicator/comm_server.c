@@ -40,39 +40,39 @@ static int
 ml_monitor(void *argc) // the message log monitor
 {
 	while (!exiting) {
+		// sem_wait(ml_sem, 0);
 		if (ML.W != ML.R) {
+			// sem_set_value(distrubtion_sem, C)
 			for (int i = 0; i < C; ++i) {
-				// write the data to the client's x ML
-				// commit the data
-				// write the ML.W on C[x]
-				// commit
+				// SEND (ML_UPDATE (ML.W, ML.R))
 			}
+			// sem_wait(distribution_sem, 0);
 			ML.R = ML.W;
 		}
-		// sleep(timeout);
+		// sem_set_value(ml_sem, 1);
 	}
 }
 
 static int
-cs_monitor(void *argc) // the client status monitor
+cq_notify(/* XXX */) // the CQ notification callback
 {
-	while (!exiting) {
-		// check CS for changes
-		if (CS[x] == MSG_READY) {
-			// read the message from the x client
-			CS[x] = MSG_DONE;
-			// write CS[x] to the x client
-		}
-		// sleep(timeout)
-	}
+	// check CS for changes
+	ASSERTeq(CS[x], MSG_READY);
+	// append the MSG BUFF to the Message Log (ML)
+	// sem_dec(ml_sem, 0);
+	CS[x] = MSG_DONE;
+	return NTFY_ACK; // SEND is done by the library
 }
 
 static int
 cq_recv_callback()
 {
-	// if bye bye message
-	// print the bye bye message
-	// cq break
+	// if RECV(bye bye message)
+		// print the bye bye message
+		// set exiting
+		// cq break
+	// if RECV(ML_UPDATE_ACK)
+		// sem_dec(distribution_sem, 1);
 }
 
 static int
@@ -81,13 +81,14 @@ void conn_thread(void *arg)
 	// rpma_conn = arg
 
 	// send the hello message
-	// - status cell for the client (CS[x])
+	// - client row for the client (CV[x])
 	// recv the hello message ACK
-	// - the client's message source buffer
-	// - the client's message log (ML)
 
 	// register recv callback
+	// register notify callback
 	// CQ loop
+	// - handles emulated Atomic Writes
+	// - handles notify messages
 }
 
 static int
@@ -119,9 +120,9 @@ eq_timeout_callback()
 int
 main(int argc, char *argv[])
 {
-	// mmap the message log - ML
-	// mmap the client status vector - CS
-	// register CS status cell for each client
+	// mmap the message log - ML (persistent)
+	// mmap the client vector - CV (persistent)
+	// register CV row for each client
 	// spawn CS monitor thread
 	// spawn ML monitor thread
 
