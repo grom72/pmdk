@@ -49,6 +49,8 @@
 extern "C" {
 #endif
 
+int rpma_ctx_lmr_get_id_size(struct rpma_ctx *ctx, size_t *size);
+
 /* local memory region */
 
 struct rpma_lmr;

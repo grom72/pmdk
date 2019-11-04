@@ -75,6 +75,9 @@ int rpma_ctx_delete(struct rpma_ctx **ctx);
 
 /* connection setup */
 
+#define RPMA_CONN_EVENT_CONNECT		0
+#define RPMA_CONN_EVENT_DISCONNECT	1
+
 struct rpma_conn;
 
 int rpma_listen(struct rpma_ctx *ctx);
