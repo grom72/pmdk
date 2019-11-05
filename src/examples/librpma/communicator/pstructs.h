@@ -31,59 +31,41 @@
  */
 
 /*
- * librpma/rma.h -- base definitions of librpma RMA entry points (EXPERIMENTAL)
- *
- * This library provides low-level support for remote access to persistent
- * memory utilizing RDMA-capable RNICs.
- *
- * See librpma(7) for details.
+ * pstructs.h -- persistent structures
  */
 
-#ifndef LIBRPMA_MR_H
-#define LIBRPMA_MR_H 1
+#ifndef COMM_PSTRUCTS_H
+#define COMM_PSTRUCTS_H 1
 
-#include <stddef.h>
-#include <stdint.h>
+#include "mlog.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#define CLIENT_MSG_READY	1
+#define CLIENT_MSG_DONE	2
 
-/* local memory region */
+#define MSG_SIZE_MAX (4096)
 
-struct rpma_lmr;
-
-#define RPMA_MR_READ_SRC	(1 << 0)
-#define RPMA_MR_READ_DST	(1 << 1)
-#define RPMA_MR_WRITE_SRC	(1 << 2)
-#define RPMA_MR_WRITE_DST	(1 << 3)
-
-int rpma_lmr_new(struct rpma_ctx *ctx, void *ptr, size_t size, int usage,
-		struct rpma_lmr **lmr);
-
-int rpma_lmr_get_ptr(struct rpma_lmr *lmr, void **ptr);
-
-int rpma_lmr_get_size(struct rpma_lmr *lmr, size_t *size);
-
-struct rpma_lmr_id {
-	uint64_t data[4];
+struct client_row {
+	uint64_t status;
+	size_t msg_size;
+	char msg[MSG_SIZE_MAX];
 };
 
-int rpma_lmr_get_id(struct rpma_lmr *lmr, struct rpma_lmr_id *id);
+struct msg_row {
+	uint64_t client_id;
+	size_t msg_size;
+	char msg[MSG_SIZE_MAX];
+};
 
-int rpma_lmr_delete(struct rpma_lmr **lmr);
+struct msg_log {
+	uint64_t write_ptr;
+	uint64_t read_ptr;
+	uint64_t capacity;
+	struct msg_row msgs[];
+};
 
-/* remote memory region */
+uint64_t get_empty_client_row(struct client_ctx *clients[], uint64_t capacity);
 
-struct rpma_rmr;
+int mlog_init(struct msg_log *ml, size_t size);
+int mlog_append(struct msg_log *ml, uint64_t client_id, size_t msg_size, char *msg);
 
-int rpma_rmr_new(struct rpma_ctx *ctx, void *id, size_t id_size, struct rpma_rmr **rmr);
-
-int rpma_rmr_get_size(struct rpma_rmr *rmr, size_t *size);
-
-int rpma_rmr_delete(struct rpma_rmr **rmr);
-
-#ifdef __cplusplus
-}
-#endif
-#endif	/* librpma/base.h */
+#endif /* pstructs.h */

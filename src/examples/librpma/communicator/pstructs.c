@@ -31,59 +31,21 @@
  */
 
 /*
- * librpma/rma.h -- base definitions of librpma RMA entry points (EXPERIMENTAL)
- *
- * This library provides low-level support for remote access to persistent
- * memory utilizing RDMA-capable RNICs.
- *
- * See librpma(7) for details.
+ * pstructs.c -- persistent structures
  */
 
-#ifndef LIBRPMA_MR_H
-#define LIBRPMA_MR_H 1
+#include "pstructs.h"
 
-#include <stddef.h>
-#include <stdint.h>
+/*
+ * get_empty_client_row -- find first empty client row
+ */
+uint64_t
+get_empty_client_row(struct client_ctx *clients[], uint64_t capacity)
+{
+	for (int i = 0; i < capacity; ++i) {
+		if (clients[i]->conn == NULL)
+			return i;
+	}
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/* local memory region */
-
-struct rpma_lmr;
-
-#define RPMA_MR_READ_SRC	(1 << 0)
-#define RPMA_MR_READ_DST	(1 << 1)
-#define RPMA_MR_WRITE_SRC	(1 << 2)
-#define RPMA_MR_WRITE_DST	(1 << 3)
-
-int rpma_lmr_new(struct rpma_ctx *ctx, void *ptr, size_t size, int usage,
-		struct rpma_lmr **lmr);
-
-int rpma_lmr_get_ptr(struct rpma_lmr *lmr, void **ptr);
-
-int rpma_lmr_get_size(struct rpma_lmr *lmr, size_t *size);
-
-struct rpma_lmr_id {
-	uint64_t data[4];
-};
-
-int rpma_lmr_get_id(struct rpma_lmr *lmr, struct rpma_lmr_id *id);
-
-int rpma_lmr_delete(struct rpma_lmr **lmr);
-
-/* remote memory region */
-
-struct rpma_rmr;
-
-int rpma_rmr_new(struct rpma_ctx *ctx, void *id, size_t id_size, struct rpma_rmr **rmr);
-
-int rpma_rmr_get_size(struct rpma_rmr *rmr, size_t *size);
-
-int rpma_rmr_delete(struct rpma_rmr **rmr);
-
-#ifdef __cplusplus
+	return UINT64_MAX;
 }
-#endif
-#endif	/* librpma/base.h */

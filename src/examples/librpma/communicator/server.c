@@ -45,56 +45,55 @@
 #include <librpma/mr.h>
 #include <librpma/msg.h>
 
-#include "comm_common.h"
+#include "pstructs.h"
+#include "msgs.h"
 
+/* server-side assumptions */
 #define CLIENTS_CAPACITY (10)
 #define MSG_LOG_MIN_CAPACITY (1000)
 
+/* derive minimal pool size from the assumptions */
+#define CLIENT_VECTOR_SIZE(capacity) \
+	(sizeof(struct client_row) * (capacity))
+#define MSG_LOG_SIZE(capacity) (sizeof(struct msg_row) * (capacity))
 #define POOL_MIN_SIZE \
 	(CLIENT_VECTOR_SIZE(CLIENTS_CAPACITY) + MSG_LOG_SIZE(MSG_LOG_MIN_CAPACITY))
 
-#define MSG_LOG_CAPACITY(size) \
-	(((size) - CLIENT_VECTOR_SIZE(CLIENTS_CAPACITY)) / MSG_LOG_SIZE(1))
-
-/* persistent */
+/* server-side persistent root object */
 struct root_obj {
 	struct client_row cv[CLIENTS_CAPACITY]; /* the clients vector */
-	struct msg_row ml[]; /* the message log */
+	struct msg_log ml;
 };
 
-#define MSG_TYPE_HELLO		1
-#define MSG_TYPE_HELLO_ACK	2
-
-struct msg_t {
-	uint64_t type;
-	union {
-		struct {
-			size_t id_size;
-			uint8_t cv_id[];
-		} hello;
-		struct bye_bye_t {
-			uint64_t status;
-		} bye_bye;
-	};
-};
-
-#define MSG_SIZE (sizeof(struct msg_t))
-
+/* server-side client context */
 struct client_ctx {
-	uint8_t *cv_ids;
+	uint64_t client_id;
+	const struct server_ctx *server;
+
+	/* persistent client-row and its id */
+	struct client_row *cr;
+	struct rpma_lmr_id cr_id;
+
+	/* RPMA send and recv messages */
+	struct rpma_msg *send_msg;
+	struct rpma_msg *recv_msg;
+
+	/* client's connection and its thread */
 	struct rpma_conn *conn;
 	pthread_t thread;
-
-	struct rpma_msg *send_msg;
 };
 
+/* server context */
 struct server_ctx {
+	struct rpma_ctx *rctx;
+
+	/* persistent data and its derivatives */
 	struct root_obj *root;
 	size_t root_size;
 	size_t ml_capacity; /* the message log capacity */
 
-	size_t id_size; /* size of a single lmr id */
-	uint64_t nclients;
+	/* client's contextes */
+	uint64_t nclients; /* current # of clients */
 	struct client_ctx clients[CLIENTS_CAPACITY];
 
 	pthread_t ml_monitor_thread;
@@ -118,20 +117,43 @@ ml_monitor(void *argc) // the message log monitor
 	}
 }
 
+/*
+ * on_notify -- on notify callback
+ */
 static int
-cq_notify(/* XXX */) // the CQ notification callback
+on_notify(void *addr, size_t length, void *arg)
 {
-	// check CS for changes
-	ASSERTeq(CS[x], MSG_READY);
-	// append the MSG BUFF to the Message Log (ML)
+	struct client_ctx *client = arg;
+	struct client_row *cr = addr;
+	struct msg_log *ml = &client->server->root->ml;
+	ASSERTeq(cr->status, CLIENT_MSG_READY);
+	mlog_append(ml, client->client_id, cr->msg_size, cr->msg);
 	// sem_dec(ml_sem, 0);
-	CS[x] = MSG_DONE;
+	cr->status = CLIENT_MSG_DONE;
+	pmem_persist(&cr->status, sizeof(cr->status));
 	return NTFY_ACK; // SEND is done by the library
 }
 
+/*
+ * on_recv -- on receive callback
+ */
 static int
-cq_recv_callback()
+on_recv(struct rpma_msg *msg, size_t length, void *arg)
 {
+	/* obtain message content */
+	struct msg_base_t *base;
+	rpma_msg_get_ptr(msg, &base);
+
+	struct msg_hello_ack_t *hello_ack;
+
+	/* process message */
+	switch (base->type) {
+	case MSG_TYPE_HELLO_ACK:
+		hello_ack = base;
+		if (hello_ack->status)
+			return 0;
+		break;
+	}
 	// if RECV(bye bye message)
 		// print the bye bye message
 		// set exiting
@@ -140,53 +162,61 @@ cq_recv_callback()
 		// sem_dec(distribution_sem, 1);
 }
 
+/*
+ * conn_thread -- single client connection entry point
+ */
 static void *
 conn_thread(void *arg)
 {
 	struct client_ctx *client = arg;
-	void *ptr;
-	struct msg_t *send;
+	struct rpma_ctx *rctx = client->server->rctx;
+	struct msg_hello_t *send;
 
-	rpma_msg_new(client->conn, MSG_SIZE, RPMA_MSG_SEND, &client->send_msg);
-	rpma_msg_get_ptr(client->send_msg, &ptr);
-	send = ptr;
+	/* allocate & post the hello message ack recv */
+	rpma_msg_new(rctx, sizeof(struct msg_hello_ack_t), RPMA_MSG_RECV,
+			&client->recv_msg);
+	rpma_conn_recv_post(client->conn, client->recv_msg);
 
-	// send->id_size = client->
-	// send the hello message
-	// - client row for the client (CV[x])
-	// recv the hello message ACK
+	/* allocate the hello message */
+	rpma_msg_new(rctx, sizeof(struct msg_hello_t), RPMA_MSG_SEND,
+			&client->send_msg);
+	rpma_msg_get_ptr(client->send_msg, &send);
 
-	// register recv callback
-	// register notify callback
-	// CQ loop
-	// - handles emulated Atomic Writes
-	// - handles notify messages
+	/* send the hello message */
+	send->base.type = MSG_TYPE_HELLO;
+	memcpy(send->cr_id, client->cr_id, sizeof(struct rpma_lmr_id));
+	rpma_conn_send(client->conn, client->send_msg);
+
+	/* register connection callbacks */
+	rpma_conn_register_on_recv(client->conn, on_recv);
+	rpma_conn_register_on_notify(client->conn, on_notify);
+	rpma_conn_loop(client->conn, client);
+	// - handles also emulated Atomic Writes
+
+	rpma_msg_delete(&client->send_msg);
+	rpma_msg_delete(&client->recv_msg);
 
 	return NULL;
 }
 
-#define RPMA_CONN_TIMEOUT (60) /* 1m */
+#define RPMA_TIMEOUT (60) /* 1m */
 
+/*
+ * on_timeout -- timeout callback
+ */
 static void
 on_timeout(struct rpma_ctx *ctx)
 {
-	rpma_conn_loop_break(ctx);
+	rpma_loop_break(ctx);
 	return;
 }
 
-static uint64_t
-get_empty_client_id(struct client_ctx *clients[])
-{
-	for (int i = 0; i < CLIENTS_CAPACITY; ++i) {
-		if (clients[i]->conn == NULL)
-			return i;
-	}
-
-	return UINT64_MAX;
-}
-
+/*
+ * on_conn_event -- connection event callback
+ */
 static int
-on_conn_event(struct rpma_ctx *rctx, uint64_t event, void *arg)
+on_conn_event(struct rpma_ctx *rctx, uint64_t event,
+		struct rpma_conn *conn, void *arg)
 {
 	struct server_ctx *ctx = arg;
 	struct client_ctx *client;
@@ -200,25 +230,43 @@ on_conn_event(struct rpma_ctx *rctx, uint64_t event, void *arg)
 			rpma_conn_reject(rctx);
 			return 0;
 		}
-		/* accept the incoming connection */
-		client_id = get_empty_conn_id(ctx->clients);
+
+		/* get empty client row */
+		client_id = get_empty_client_row(ctx->clients, CLIENTS_CAPACITY);
 		client = &ctx->clients[client_id];
-		rpma_conn_new(rctx, &client->conn);
 		++ctx->nclients;
+
+		/* accept the incoming connection */
+		rpma_conn_new(rctx, &client->conn);
+		rpma_conn_set_user_id(client->conn, client_id);
 		rpma_conn_accept(client->conn);
+
+		/* stop waiting for timeout */
 		rpma_unregister_on_timeout(rctx);
+
 		/* spawn the connection thread */
 		pthread_create(&client->thread, NULL, conn_thread,
-				&client);
+				client);
 		break;
+
 	case RPMA_CONN_EVENT_DISCONNECT:
-		// detect somehow the conn_id
+		/* get client data from the connection */
+		rpma_conn_get_user_id(conn, &client_id);
 		client = &ctx->clients[client_id];
-		rpma_conn_rt_loop_break(client->conn);
+
+		/* break its loop and wait for thread join */
+		rpma_conn_loop_break(conn);
 		pthread_join(client->thread, &ret);
+
+		/* clean the RPMA connection resources */
+		rpma_conn_delete(&client->conn);
+
+		/* decrease # of clients */
 		--ctx->nclients;
+
+		/* optionally start waiting for timeout */
 		if (ctx->nclients == 0)
-			rpma_register_on_timeout(rctx, on_timeout, RPMA_CONN_TIMEOUT);
+			rpma_register_on_timeout(rctx, on_timeout, RPMA_TIMEOUT);
 		break;
 	default:
 		return -1; /* RPMA_E_UNHANDLED_EVENT */
@@ -234,54 +282,66 @@ main(int argc, char *argv[])
 	const char *addr = argv[2];
 	const char *service = argv[3];
 
+	/* server context */
 	struct server_ctx ctx;
 
-	/*
-	 * map the server root object storing:
-	 * - a clients vector - CV
-	 * - a message log - ML
-	 */
+	/* map the server root object */
 	ctx.root = pmem_map_file(path, POOL_MIN_SIZE, PMEM_FILE_CREATE, O_RDWR,
 			&ctx.root_size, NULL);
-	ctx.ml_capacity = MSG_LOG_CAPACITY(ctx.root_size);
+	size_t ml_size = ctx.root_size - (&ctx.root->ml - ctx.root);
+	ml_init(&ctx.root->ml, ml_size);
 
-	/* prepare RPMA connection */
+	/* prepare RPMA configuration */
 	struct rpma_config *cfg;
 	rpma_config_new(&cfg);
 	rpma_config_set_addr(cfg, addr);
 	rpma_config_set_service(cfg, service);
 
-	struct rpma_ctx *rctx;
-	rpma_ctx_new(cfg, &rctx);
+	/* allocate RPMA context */
+	rpma_ctx_new(cfg, &ctx->rctx);
+	struct rpma_ctx *rctx = ctx->rctx;
 
-	/* register CV rows for each client */
+	/* initialize client contexts */
 	struct rpma_lmr cv_lmrs[CLIENTS_CAPACITY];
-	rpma_ctx_lmr_get_id_size(rctx, &ctx.id_size);
+	ctx.nclients = 0;
 	for (int i = 0; i < CLIENTS_CAPACITY; ++i) {
-		/* register lmr */
-		rpma_lmr_new(rctx, &ctx.root->cv[i], CLIENT_VECTOR_SIZE(1),
+		/* local part */
+		const struct client_ctx *client = &ctx.clients[i];
+		client->client_id = i;
+		client->server = ctx;
+		client->cr = &ctx.root->cv[i];
+		client->conn = NULL;
+		/* RPMA part - client's row registration & id */
+		rpma_lmr_new(rctx, client->cr, sizeof(struct client_row),
 				RPMA_MR_WRITE_DST, &cv_lmrs[i]);
-		/* obtain lmr id */
-		size_t id_size = ctx.id_size;
-		ctx.cv_ids[i] = malloc(ctx.id_size);
-		rpma_lmr_get_id(cv_lmrs[i], ctx.cv_ids[i], &id_size);
+		rpma_lmr_get_id(cv_lmrs[i], &client->cr_id);
 	}
 
 	/* spawn ML monitor thread */
 	pthread_create(&ctx.ml_monitor_thread, NULL, ml_monitor, &ctx);
 
-	/* setup connection loop */
-	ctx.nconns = 0;
-	for (int i = 0; i < CLIENTS_CAPACITY; ++i)
-		ctx.conns[i] = NULL;
+	/* RPMA registers callbacks and start looping */
 	rpma_listen(rctx);
 	rpma_register_on_conn_event(rctx, on_conn_event);
-	rpma_register_on_timeout(rctx, on_timeout, RPMA_CONN_TIMEOUT);
+	rpma_register_on_timeout(rctx, on_timeout, RPMA_TIMEOUT);
 	rpma_conn_loop(rctx);
 
 	/* join ML monitor thread */
 	int ret;
 	pthread_join(ctx.ml_monitor_thread, &ret);
+
+	/* cleanup client contexts */
+	for (int i = 0; i < CLIENTS_CAPACITY; ++i) {
+		/* RPMA - release memory registrations */
+		rpma_lmr_delete(&cv_lmrs[i]);
+	}
+
+	/* RPMA - cleanup server resources */
+	rpma_ctx_delete(ctx->rctx);
+	rpma_config_delete(&cfg);
+
+	/* unmap the persistent part */
+	pmem_unmap(ctx->root, ctx->root_size);
 
 	return 0;
 }
