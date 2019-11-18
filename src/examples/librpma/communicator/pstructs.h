@@ -63,6 +63,9 @@ struct msg_log {
 	struct msg_row msgs[];
 };
 
+#define MSG_LOG_SIZE(CAPACITY) \
+	(sizeof(struct msg_log) + sizeof(struct msg_row) * (CAPACITY))
+
 uint64_t get_empty_client_row(struct client_ctx *clients[], uint64_t capacity);
 
 int mlog_init(struct msg_log *ml, size_t size);

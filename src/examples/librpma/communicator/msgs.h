@@ -37,21 +37,41 @@
 #ifndef COMM_MSGS_H
 #define COMM_MSGS_H 1
 
-#define MSG_TYPE_HELLO		1
-#define MSG_TYPE_HELLO_ACK	2
+#define MSG_TYPE_ACK		1
+#define MSG_TYPE_HELLO		2
+#define MSG_TYPE_MLOG_UPDATE	3
+#define MSG_TYPE_BYE_BYE	4
 
+/* base message type */
 struct msg_base_t {
 	uint64_t type;
 };
 
-struct msg_hello_t {
-	struct msg_base_t base;
-	struct rpma_lmr_id cr_id; /* client-row id */
-}
-
-struct msg_hello_ack_t {
-	struct msg_base_t base;
+/* generic ACK message */
+struct msg_ack_t {
+	uint64_t original_msg_type;
 	uint64_t status;
+};
+
+/* hello message - sending the required identifiers */
+struct msg_hello_t {
+	struct rpma_lmr_id cr_id; /* client-row id */
+	struct rpma_lmr_id ml_id; /* the message log id */
+};
+
+/* message log update */
+struct msg_mlog_update {
+	uintptr_t wptr;
+};
+
+/* unified message type */
+struct msg_t {
+	struct msg_base_t base;
+	union {
+		struct msg_ack_t ack;
+		struct msg_hello_t hello;
+		struct msg_mlog_update update;
+	};
 };
 
 #endif /* msgs.h */

@@ -39,13 +39,13 @@
 /*
  * get_empty_client_row -- find first empty client row
  */
-uint64_t
+struct client_ctx *
 get_empty_client_row(struct client_ctx *clients[], uint64_t capacity)
 {
 	for (int i = 0; i < capacity; ++i) {
 		if (clients[i]->conn == NULL)
-			return i;
+			return &clients[i];
 	}
 
-	return UINT64_MAX;
+	return NULL;
 }

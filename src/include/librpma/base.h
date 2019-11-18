@@ -92,6 +92,19 @@ int rpma_conn_connect(struct rpma_conn *conn);
 
 int rpma_conn_delete(struct rpma_conn **conn);
 
+/* connection loop */
+
+typedef int (*rpma_on_connection_func)(struct rpma_ctx *rctx, uint64_t event,
+		struct rpma_conn *conn, void *uarg);
+
+int rpma_register_on_connection_event(struct rpma_ctx *ctx,
+		rpma_on_connection_func func);
+
+int rpma_register_on_connection_timeout(struct rpma_ctx *ctx,
+		rpma_on_connection_func func);
+
+int rpma_connection_loop(struct rpma_ctx *rctx, void *uarg);
+
 /* error handling */
 
 const char *rpma_errormsg(void);
