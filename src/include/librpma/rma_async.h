@@ -50,28 +50,29 @@ extern "C" {
 #endif
 
 #include <librpma/base.h>
-#include <librpma/mr.h>
+#include <librpma/memory.h>
 
 /* remote read */
-int rpma_conn_read_async(struct rpma_conn *conn,
-		struct rpma_mr *dst, size_t dst_off,
-		struct rpma_rmr *src, size_t src_off, size_t length);
+int rpma_connection_read_async(struct rpma_connection *conn,
+		Rpma_memory *dst, size_t dst_off,
+		Rpma_rmemory *src, size_t src_off, size_t length);
 
-int rpma_conn_read_wait(struct rpma_conn *conn, struct rpma_mr *dst);
+int rpma_connection_read_wait(struct rpma_connection *conn,
+		Rpma_memory *dst);
 
 /* remote write */
 
 #define RPMA_WRITE_RELEASE_SRC (1 << 0)
 
-int rpma_conn_write_async(struct rpma_conn *conn,
-		struct rpma_rmr *dst, size_t dst_off,
-		struct rpma_mr *src, size_t src_off, size_t length, int flags);
+int rpma_connection_write_async(struct rpma_connection *conn,
+		Rpma_rmemory *dst, size_t dst_off,
+		Rpma_memory *src, size_t src_off, size_t length, int flags);
 
 /* remote commands commit */
 
-int rpma_conn_commit_async(struct rpma_conn *conn);
+int rpma_connection_commit_async(struct rpma_connection *conn);
 
-int rpma_conn_commit_wait(struct rpma_conn *conn);
+int rpma_connection_commit_wait(struct rpma_connection *conn);
 
 #ifdef __cplusplus
 }

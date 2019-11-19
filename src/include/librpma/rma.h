@@ -50,36 +50,36 @@ extern "C" {
 #endif
 
 #include <librpma/base.h>
-#include <librpma/mr.h>
+#include <librpma/memory.h>
 #include <librpma/rma_async.h>
 
 inline int
-rpma_conn_read(struct rpma_conn *conn,
-		struct rpma_mr *dst, size_t dst_off,
-		struct rpma_rmr *src, size_t src_off, size_t length)
+rpma_connection_read(struct rpma_connection *conn,
+		Rpma_memory *dst, size_t dst_off,
+		Rpma_rmemory *src, size_t src_off, size_t length)
 {
-	int ret = rpma_conn_read_async(conn, dst, dst_off, src, src_off, length);
+	int ret = rpma_connection_read_async(conn, dst, dst_off, src, src_off, length);
 	if (ret)
 		return ret;
 
-	return rpma_conn_read_wait(conn, dst);
+	return rpma_connection_read_wait(conn, dst);
 }
 
 inline int
-rpma_conn_write_and_commit(struct rpma_conn *conn,
-		struct rpma_rmr *dst, size_t dst_off,
-		struct rpma_mr *src, size_t src_off, size_t length)
+rpma_connection_write_and_commit(struct rpma_connection *conn,
+		Rpma_rmemory *dst, size_t dst_off,
+		Rpma_memory *src, size_t src_off, size_t length)
 {
-	int ret = rpma_conn_write_async(conn,
+	int ret = rpma_connection_write_async(conn,
 			dst, dst_off, src, src_off, length, 0);
 	if (ret)
 		return ret;
 
-	ret = rpma_conn_commit_async(conn);
+	ret = rpma_connection_commit_async(conn);
 	if (ret)
 		return ret;
 
-	return rpma_conn_commit_wait(conn);
+	return rpma_connection_commit_wait(conn);
 }
 
 #ifdef __cplusplus

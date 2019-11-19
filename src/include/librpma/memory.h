@@ -31,7 +31,7 @@
  */
 
 /*
- * librpma/rma.h -- base definitions of librpma RMA entry points (EXPERIMENTAL)
+ * librpma/memory.h -- base definitions of librpma memory management (EXPERIMENTAL)
  *
  * This library provides low-level support for remote access to persistent
  * memory utilizing RDMA-capable RNICs.
@@ -39,8 +39,8 @@
  * See librpma(7) for details.
  */
 
-#ifndef LIBRPMA_MR_H
-#define LIBRPMA_MR_H 1
+#ifndef LIBRPMA_MEMORY_H
+#define LIBRPMA_MEMORY_H 1
 
 #include <stddef.h>
 #include <stdint.h>
@@ -51,39 +51,43 @@ extern "C" {
 
 /* local memory region */
 
-struct rpma_lmr;
+struct rpma_memory_local;
+
+typedef struct rpma_memory_local Rpma_memory;
 
 #define RPMA_MR_READ_SRC	(1 << 0)
 #define RPMA_MR_READ_DST	(1 << 1)
 #define RPMA_MR_WRITE_SRC	(1 << 2)
 #define RPMA_MR_WRITE_DST	(1 << 3)
 
-int rpma_lmr_new(struct rpma_ctx *ctx, void *ptr, size_t size, int usage,
-		struct rpma_lmr **lmr);
+int rpma_memory_local_new(struct rpma_zone *zone, void *ptr, size_t size, int usage,
+		Rpma_memory **mem);
 
-int rpma_lmr_get_ptr(struct rpma_lmr *lmr, void **ptr);
+int rpma_memory_local_get_ptr(Rpma_memory *mem, void **ptr);
 
-int rpma_lmr_get_size(struct rpma_lmr *lmr, size_t *size);
+int rpma_memory_local_get_size(Rpma_memory *mem, size_t *size);
 
-struct rpma_lmr_id {
+struct rpma_memory_id {
 	uint64_t data[4];
 };
 
-int rpma_lmr_get_id(struct rpma_lmr *lmr, struct rpma_lmr_id *id);
+int rpma_memory_local_get_id(Rpma_memory *mem, struct rpma_memory_id *id);
 
-int rpma_lmr_delete(struct rpma_lmr **lmr);
+int rpma_memory_local_delete(Rpma_memory **mem);
 
 /* remote memory region */
 
-struct rpma_rmr;
+struct rpma_memory_remote;
 
-int rpma_rmr_new(struct rpma_ctx *ctx, void *id, size_t id_size, struct rpma_rmr **rmr);
+typedef struct rpma_memory_remote Rpma_rmemory;
 
-int rpma_rmr_get_size(struct rpma_rmr *rmr, size_t *size);
+int rpma_memory_remote_new(struct rpma_ctx *ctx, struct rpma_memory_id *id, Rpma_rmemory **rmem);
 
-int rpma_rmr_delete(struct rpma_rmr **rmr);
+int rpma_memory_remote_get_size(Rpma_rmemory *rmem, size_t *size);
+
+int rpma_memory_remote_delete(Rpma_rmemory **rmem);
 
 #ifdef __cplusplus
 }
 #endif
-#endif	/* librpma/base.h */
+#endif	/* librpma/memory.h */

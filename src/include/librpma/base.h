@@ -65,45 +65,51 @@ int rpma_config_set_service(struct rpma_config *cfg, const char *service);
 
 int rpma_config_delete(struct rpma_config **cfg);
 
-/* context setup */
+/* zone setup */
 
-struct rpma_ctx;
+struct rpma_zone;
 
-int rpma_ctx_new(struct rpma_config *cfg, struct rpma_ctx **ctx);
+int rpma_zone_new(struct rpma_config *cfg, struct rpma_zone **zone);
 
-int rpma_ctx_delete(struct rpma_ctx **ctx);
+int rpma_zone_delete(struct rpma_zone **zone);
 
 /* connection setup */
 
 #define RPMA_CONN_EVENT_CONNECT		0
 #define RPMA_CONN_EVENT_DISCONNECT	1
 
-struct rpma_conn;
+struct rpma_connection;
 
-int rpma_listen(struct rpma_ctx *ctx);
+int rpma_listen(struct rpma_zone *zone);
 
-int rpma_conn_new(struct rpma_ctx *ctx, struct rpma_conn **conn);
+int rpma_connection_new(struct rpma_zone *zone, struct rpma_connection **conn);
 
-int rpma_conn_wait_for_shutdown(struct rpma_conn *conn);
+int rpma_connection_wait_for_shutdown(struct rpma_connection *conn);
 
-int rpma_conn_accept(struct rpma_conn *conn);
+int rpma_connection_accept(struct rpma_connection *conn);
 
-int rpma_conn_connect(struct rpma_conn *conn);
+int rpma_connection_make(struct rpma_connection *conn);
 
-int rpma_conn_delete(struct rpma_conn **conn);
+int rpma_connection_delete(struct rpma_connection **conn);
+
+int rpma_connection_set_msg_size(struct rpma_connection *conn, size_t size);
+
+int rpma_connection_set_custom_data(struct rpma_connection *conn, void *data);
+
+int rpma_connection_get_custom_data(struct rpma_connection *conn, void **data);
 
 /* connection loop */
 
-typedef int (*rpma_on_connection_func)(struct rpma_ctx *rctx, uint64_t event,
-		struct rpma_conn *conn, void *uarg);
+typedef int (*rpma_on_connection_func)(struct rpma_zone *zone, uint64_t event,
+		struct rpma_connection *conn, void *uarg);
 
-int rpma_register_on_connection_event(struct rpma_ctx *ctx,
+int rpma_register_on_connection_event(struct rpma_zone *zone,
 		rpma_on_connection_func func);
 
-int rpma_register_on_connection_timeout(struct rpma_ctx *ctx,
+int rpma_register_on_connection_timeout(struct rpma_zone *zone,
 		rpma_on_connection_func func);
 
-int rpma_connection_loop(struct rpma_ctx *rctx, void *uarg);
+int rpma_connection_loop(struct rpma_zone *zone, void *uarg);
 
 /* error handling */
 
