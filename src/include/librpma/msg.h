@@ -62,11 +62,11 @@ int rpma_msg_get_ptr(struct rpma_msg *msg, void **ptr);
 
 int rpma_msg_delete(struct rpma_msg **msg);
 
-int rpma_conn_send(struct rpma_conn *conn, struct rpma_msg *send);
+int rpma_conn_send(struct rpma_connection *conn, struct rpma_msg *send);
 
-int rpma_conn_recv_post(struct rpma_conn *conn, struct rpma_msg *recv);
+int rpma_conn_recv_post(struct rpma_connection *conn, struct rpma_msg *recv);
 
-int rpma_conn_recv(struct rpma_conn *conn, struct rpma_msg **recv);
+int rpma_conn_recv(struct rpma_connection *conn, struct rpma_msg **recv);
 
 #ifdef __cplusplus
 }

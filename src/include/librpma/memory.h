@@ -81,7 +81,7 @@ struct rpma_memory_remote;
 
 typedef struct rpma_memory_remote Rpma_rmemory;
 
-int rpma_memory_remote_new(struct rpma_ctx *ctx, struct rpma_memory_id *id, Rpma_rmemory **rmem);
+int rpma_memory_remote_new(struct rpma_zone *zone, struct rpma_memory_id *id, Rpma_rmemory **rmem);
 
 int rpma_memory_remote_get_size(Rpma_rmemory *rmem, size_t *size);
 
