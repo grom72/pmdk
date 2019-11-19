@@ -56,7 +56,7 @@ rpma_config_set_service(struct rpma_config *cfg, const char *service)
 }
 
 int
-rpma_config_delete(struct rpma_config *cfg)
+rpma_config_delete(struct rpma_config **cfg)
 {
 	return RPMA_E_NOSUPP;
 }
