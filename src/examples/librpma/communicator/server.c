@@ -31,7 +31,7 @@
  */
 
 /*
- * comm_server.c -- librpma-based communicator server
+ * server.c -- librpma-based communicator server
  */
 
 #include <pthread.h>
@@ -44,7 +44,7 @@
 
 #include <libpmem.h>
 #include <librpma/base.h>
-#include <librpma/mr.h>
+#include <librpma/memory.h>
 #include <librpma/msg.h>
 
 #include "pstructs.h"
@@ -276,8 +276,9 @@ on_transmission_recv(struct rpma_conn *conn, struct rpma_msg *rmsg, size_t lengt
 		return on_transmission_recv_process_ack(msg, client);
 	case MSG_TYPE_BYE_BYE:
 		/* XXX print bye bye message */
-		rpma_transmission_loop_break(client->conn);
-		break;
+		return rpma_transmission_loop_break(client->conn);
+	default:
+		return RPMA_E_INVALID_MSG;
 	}
 }
 
