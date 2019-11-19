@@ -39,8 +39,8 @@
  * See librpma(7) for details.
  */
 
-#ifndef LIBRPMA_RMA_H
-#define LIBRPMA_RMA_H 1
+#ifndef LIBRPMA_RMA_ASYNC_H
+#define LIBRPMA_RMA_ASYNC_H 1
 
 #include <stddef.h>
 #include <stdint.h>
@@ -77,4 +77,4 @@ int rpma_connection_commit_wait(struct rpma_connection *conn);
 #ifdef __cplusplus
 }
 #endif
-#endif	/* librpma/base.h */
+#endif	/* librpma/rma_async.h */
