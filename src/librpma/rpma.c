@@ -60,3 +60,9 @@ rpma_config_delete(struct rpma_config *cfg)
 {
 	return RPMA_E_NOSUPP;
 }
+
+int
+rpma_connection_commit_wait(struct rpma_connection *conn)
+{
+	return RPMA_E_NOSUPP;
+}
