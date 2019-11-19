@@ -71,21 +71,21 @@ struct client_ctx {
 
 	/* persistent client-row and its id */
 	struct client_row *cr;
-	struct rpma_lmr *cr_mr; /* memory region */
-	struct rpma_lmr_id cr_id; /* MR identifier */
+	struct rpma_memory_local *cr_mr; /* memory region */
+	struct rpma_memory_id cr_id; /* MR identifier */
 
 	/* RPMA send and recv messages */
 	struct rpma_msg *send_msg;
 	struct rpma_msg *recv_msg;
 
 	/* client's connection and its thread */
-	struct rpma_conn *conn;
+	struct rpma_connection *conn;
 	pthread_t thread;
 };
 
 /* server context */
 struct server_ctx {
-	struct rpma_ctx *rctx;
+	struct rpma_zone *zone;
 	uint64_t exiting;
 
 	/* persistent data and its derivatives */
@@ -217,7 +217,7 @@ distributor_thread_func(void *arg)
  * on_transmission_notify -- on transmission notify callback
  */
 static int
-on_transmission_notify(struct rpma_conn *conn, void *addr, size_t length, void *arg)
+on_transmission_notify(struct rpma_connection *conn, void *addr, size_t length, void *arg)
 {
 	/* verify the client's message is ready */
 	struct client_row *cr = addr;
@@ -261,7 +261,7 @@ on_transmission_recv_process_ack(union msg_t *msg, struct client_ctx *client)
  * on_transmission_recv -- on transmission receive callback
  */
 static int
-on_transmission_recv(struct rpma_conn *conn, struct rpma_msg *rmsg, size_t length, void *arg)
+on_transmission_recv(struct rpma_connection *conn, struct rpma_msg *rmsg, size_t length, void *arg)
 {
 	struct client_ctx *client;
 	rpma_connection_get_custom_data(conn, &client);
@@ -285,18 +285,18 @@ on_transmission_recv(struct rpma_conn *conn, struct rpma_msg *rmsg, size_t lengt
 /*
  * client_hello_init -- send the hello message and prepare for ACK
  */
-void
+static void
 client_hello_init(struct client_ctx *client)
 {
-	struct rpma_ctx *rctx = client->server->rctx;
+	struct rpma_zone *zone = client->server->zone;
 	struct msg_t *send;
 
 	/* allocate & post the hello message ACK recv */
-	rpma_msg_new(rctx, RPMA_MSG_RECV, &client->recv_msg);
+	rpma_msg_new(zone, RPMA_MSG_RECV, &client->recv_msg);
 	rpma_connection_recv_post(client->conn, client->recv_msg);
 
 	/* allocate the hello message */
-	rpma_msg_new(rctx, RPMA_MSG_SEND, &client->send_msg);
+	rpma_msg_new(zone, RPMA_MSG_SEND, &client->send_msg);
 	rpma_msg_get_ptr(client->send_msg, &send);
 
 	/* send the hello message */
@@ -308,7 +308,7 @@ client_hello_init(struct client_ctx *client)
 /*
  * client_hello_fini -- cleanup after the hello message exchange
  */
-void
+static void
 client_hello_fini(struct client_ctx *client)
 {
 	rpma_msg_delete(&client->send_msg);
@@ -342,10 +342,10 @@ client_thread_func(void *arg)
  * on_connection_timeout -- connection timeout callback
  */
 static void
-on_connection_timeout(struct rpma_ctx *rctx)
+on_connection_timeout(struct rpma_zone *zone)
 {
 	struct server_ctx *ctx;
-	rpma_connection_get_custom_data(rctx, &ctx);
+	rpma_connection_get_custom_data(zone, &ctx);
 	ctx->exiting = true; /* XXX atomic */
 
 	rpma_connection_loop_break(ctx);
@@ -356,8 +356,8 @@ on_connection_timeout(struct rpma_ctx *rctx)
  * on_connection_event -- connection event callback
  */
 static int
-on_connection_event(struct rpma_ctx *rctx, uint64_t event,
-		struct rpma_conn *conn, void *uarg)
+on_connection_event(struct rpma_zone *zone, uint64_t event,
+		struct rpma_connection *conn, void *uarg)
 {
 	struct server_ctx *ctx = arg;
 	struct client_ctx *client;
@@ -367,7 +367,7 @@ on_connection_event(struct rpma_ctx *rctx, uint64_t event,
 	case RPMA_CONNECTION_EVENT_INCOMING:
 		/* not enough capacity */
 		if (ctx->nclients == CLIENTS_MAX) {
-			rpma_connection_reject(rctx);
+			rpma_connection_reject(zone);
 			return 0;
 		}
 
@@ -376,13 +376,13 @@ on_connection_event(struct rpma_ctx *rctx, uint64_t event,
 		++ctx->nclients;
 
 		/* accept the incoming connection */
-		rpma_connection_new(rctx, &client->conn);
+		rpma_connection_new(zone, &client->conn);
 		rpma_connection_set_custom_data(client->conn, (void *)client);
 		rpma_connection_set_msg_size(client->conn, sizeof(struct msg_t));
 		rpma_connection_accept(client->conn);
 
 		/* stop waiting for timeout */
-		rpma_connection_unregister_on_timeout(rctx);
+		rpma_connection_unregister_on_timeout(zone);
 
 		/* spawn the connection thread */
 		pthread_create(&client->thread, NULL, client_thread_func,
@@ -405,7 +405,7 @@ on_connection_event(struct rpma_ctx *rctx, uint64_t event,
 
 		/* optionally start waiting for timeout */
 		if (ctx->nclients == 0)
-			rpma_register_on_connection_timeout(rctx, on_connection_timeout, RPMA_TIMEOUT);
+			rpma_register_on_connection_timeout(zone, on_connection_timeout, RPMA_TIMEOUT);
 		break;
 	default:
 		return RPMA_E_UNHANDLED_EVENT;
@@ -417,7 +417,7 @@ on_connection_event(struct rpma_ctx *rctx, uint64_t event,
 /*
  * distributor_init -- spawn the ML distributor thread
  */
-void
+static void
 distributor_init(struct server_ctx *ctx)
 {
 	sem_init(&ctx->distributor.notify, 0, 0);
@@ -428,7 +428,7 @@ distributor_init(struct server_ctx *ctx)
 /*
  * distributor_fini -- clean up the ML distributor
  */
-void
+static void
 distributor_fini(struct server_ctx *ctx)
 {
 	int ret;
@@ -440,10 +440,10 @@ distributor_fini(struct server_ctx *ctx)
 /*
  * clients_init -- initialize client contexts
  */
-void
+static void
 clients_init(struct server_ctx *ctx)
 {
-	struct rpma_ctx *rctx = ctx->rctx;
+	struct rpma_zone *zone = ctx->zone;
 
 	ctx->nclients = 0;
 	for (int i = 0; i < CLIENTS_MAX; ++i) {
@@ -454,28 +454,28 @@ clients_init(struct server_ctx *ctx)
 		client->cr = &ctx->root->cv[i];
 		client->conn = NULL;
 		/* RPMA part - client's row registration & id */
-		rpma_lmr_new(rctx, client->cr, sizeof(struct client_row),
+		rpma_memory_local_new(zone, client->cr, sizeof(struct client_row),
 				RPMA_MR_WRITE_DST, &client->cr_mr);
-		rpma_lmr_get_id(client->cr_mr, &client->cr_id);
+		rpma_memory_local_get_id(client->cr_mr, &client->cr_id);
 	}
 }
 
 /*
  * clients_fini -- cleanup client contexts
  */
-void
+static void
 clients_fini(struct server_ctx *ctx)
 {
 	/* RPMA - release memory registrations */
 	for (int i = 0; i < CLIENTS_MAX; ++i) {
-		rpma_lmr_delete(&ctx->clients[i].cr_mr);
+		rpma_memory_local_delete(&ctx->clients[i].cr_mr);
 	}
 }
 
 /*
  * remote_init -- prepare RPMA context
  */
-void
+static void
 remote_init(struct server_ctx *ctx, const char *addr, const char *service)
 {
 	/* prepare RPMA configuration */
@@ -485,7 +485,7 @@ remote_init(struct server_ctx *ctx, const char *addr, const char *service)
 	rpma_config_set_service(cfg, service);
 
 	/* allocate RPMA context */
-	rpma_ctx_new(cfg, &ctx->rctx);
+	rpma_zone_new(cfg, &ctx->zone);
 
 	/* destroy RPMA configuration */
 	rpma_config_delete(cfg);
@@ -494,33 +494,33 @@ remote_init(struct server_ctx *ctx, const char *addr, const char *service)
 /*
  * remote_main -- main entry-point to RPMA
  */
-void
+static void
 remote_main(struct server_ctx *ctx)
 {
-	struct rpma_ctx *rctx = ctx->rctx;
+	struct rpma_zone *zone = ctx->zone;
 
-	rpma_listen(rctx);
+	rpma_listen(zone);
 
 	/* RPMA registers callbacks and start looping */
-	rpma_register_on_connection_event(rctx, on_connection_event);
-	rpma_register_on_connection_timeout(rctx, on_connection_timeout, RPMA_TIMEOUT);
+	rpma_register_on_connection_event(zone, on_connection_event);
+	rpma_register_on_connection_timeout(zone, on_connection_timeout, RPMA_TIMEOUT);
 
-	rpma_connection_loop(rctx, NULL);
+	rpma_connection_loop(zone, NULL);
 }
 
 /*
  * remote_fini -- delete RPMA content
  */
-void
+static void
 remote_fini(struct server_ctx *ctx)
 {
-	rpma_ctx_delete(ctx->rctx);
+	rpma_zone_delete(ctx->zone);
 }
 
 /*
  * pmem_init -- map the server root object
  */
-void
+static void
 pmem_init(struct server_ctx *ctx, const char *path)
 {
 	ctx->root = pmem_map_file(path, POOL_MIN_SIZE, PMEM_FILE_CREATE, O_RDWR,
@@ -533,7 +533,7 @@ pmem_init(struct server_ctx *ctx, const char *path)
 /*
  * pmem_fini -- unmap the persistent part
  */
-void
+static void
 pmem_fini(struct server_ctx *ctx)
 {
 	pmem_unmap(ctx->root, ctx->root_size);

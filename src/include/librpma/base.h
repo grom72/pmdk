@@ -52,6 +52,8 @@ extern "C" {
 #define RPMA_E_OK			0
 #define RPMA_E_EXTERNAL		1
 #define RPMA_E_NOSUPP		2
+#define RPMA_E_INVALID_MSG	3
+#define RPMA_E_UNHANDLED_EVENT	4
 
 /* config setup */
 
@@ -75,8 +77,8 @@ int rpma_zone_delete(struct rpma_zone **zone);
 
 /* connection setup */
 
-#define RPMA_CONN_EVENT_CONNECT		0
-#define RPMA_CONN_EVENT_DISCONNECT	1
+#define RPMA_CONNECTION_EVENT_INCOMING		0
+#define RPMA_CONNECTION_EVENT_DISCONNECT	1
 
 struct rpma_connection;
 

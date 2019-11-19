@@ -37,6 +37,8 @@
 #ifndef COMM_MLOG_H
 #define COMM_MLOG_H 1
 
+#include <pstructs.h>
 
+int ml_init(struct msg_log, size_t size);
 
 #endif /* mlog.h */
