@@ -31,20 +31,12 @@
 #
 
 #
-# examples/librpma/Makefile -- build the librpma examples
+# examples/librpmem/communicator/Makefile -- build the communicator example
 #
-TOP := ../../..
-include $(TOP)/src/common.inc
+PROGS = communicator
 
-ifeq ($(BUILD_RPMEM), y)
-PROGS = manpage_conn
-DIRS = communicator
+LIBS = -lrpma -lpmem -pthread
 
-LIBS = -lrpmem -pthread
-else
-$(info NOTE: Skipping librpma examples because $(BUILD_RPMEM_INFO))
-endif
+include ../../Makefile.inc
 
-include ../Makefile.inc
-
-manpage_conn: manpage_common.o manpage_conn.o
+server: server.o pstructs.o
