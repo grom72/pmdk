@@ -564,7 +564,7 @@ main(int argc, char *argv[])
 	const char *addr = argv[2];
 	const char *service = argv[3];
 
-	struct server_ctx ctx; /* server context */
+	struct server_ctx ctx = {0};
 
 	pmem_init(&ctx, path);
 	remote_init(&ctx, addr, service);
