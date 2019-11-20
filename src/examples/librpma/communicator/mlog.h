@@ -49,4 +49,10 @@ uintptr_t ml_get_wptr(struct msg_log *ml);
 
 int ml_set_rptr(struct msg_log *ml, uintptr_t rptr);
 
+int ml_set_wptr(struct msg_log *ml, uintptr_t wptr);
+
+size_t ml_offset(struct msg_log *ml, uintptr_t ptr);
+
+uintptr_t ml_read(struct msg_log *ml);
+
 #endif /* mlog.h */

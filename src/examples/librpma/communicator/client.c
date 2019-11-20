@@ -41,6 +41,7 @@
 #include <stdint.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #include <fcntl.h>
 
 #include <libpmem.h>
@@ -68,7 +69,6 @@ struct client_ctx {
 	struct rpma_zone *zone;
 	struct rpma_connection *conn;
 	uint64_t exiting;
-	uint64
 	uint64_t hello_done;
 
 	/* persistent data and its derivatives */
@@ -86,32 +86,70 @@ struct client_ctx {
 	/* RPMA send and recv messages */
 	struct rpma_msg *send_msg;
 	struct rpma_msg *recv_msg;
+
+	/* writer */
+	pthread_t thread;
 };
 
 /*
- * on_transmission_notify -- on transmission notify callback
+ * send_bye_bye -- send MSG_TYPE_BYE_BYE message
  */
-static int
-on_transmission_notify(struct rpma_connection *conn, void *addr, size_t length, void *arg)
+static void
+send_bye_bye(struct client_ctx *ctx)
 {
-	/* verify the client's message is ready */
-	struct client_row *cr = addr;
-	ASSERTeq(cr->status, CLIENT_MSG_READY);
+	struct msg_t *msg;
+	rpma_msg_get_ptr(ctx->send_msg, (void **)&msg);
 
-	/* obtain custom connection data - the client */
-	struct client_ctx *client;
-	rpma_connect_get_custom_data(conn, &client);
+	msg->base.type = MSG_TYPE_BYE_BYE;
+	rpma_connection_send(ctx->conn, ctx->send_msg);
+}
 
-	/* append the client's message to ML */
-	struct msg_log *ml = &client->server->root->ml;
-	mlog_append(ml, client->client_id, cr->msg_size, cr->msg);
-	distributor_notify(client->server->distributor);
+/*
+ * writer_publish_msg -- XXX
+ */
+static void
+writer_publish_msg(struct client_ctx *ctx)
+{
+	/* write the message */
+	size_t offset = offsetof(struct client_row, msg);
+	size_t length = sizeof(char) * MSG_SIZE_MAX;
+	rpma_connection_write_and_commit(ctx->conn, ctx->cr_remote, offset,
+			ctx->cr_local, offset, length);
 
-	/* set the message is already processed */
-	cr->status = CLIENT_MSG_DONE;
-	pmem_persist(&cr->status, sizeof(cr->status));
+	/* write the client status */
+	/* XXX atomic_write? */
+	offset = offsetof(struct client_row, status);
+	length = sizeof(ctx->cr.status);
+	rpma_connection_write_and_commit(ctx->conn, ctx->cr_remote, offset,
+			ctx->cr_local, offset, length);
+	rpma_connection_write_and_commit(
+}
 
-	return RPMA_E_OK;
+/*
+ * writer_thread_func -- client writer entry point
+ */
+static void *
+writer_thread_func(void *arg)
+{
+	struct client_ctx *ctx = arg;
+	ssize_t ret;
+
+	while(!ctx->exiting) {
+		printf("< ");
+		ret = read(STDIN_FILENO, ctx->cr.msg, MSG_SIZE_MAX);
+
+		if (ret == 0)
+			continue;
+		if (ret < 0) {
+			send_bye_bye(ctx);
+			ctx->exiting = true; /* XXX atomic */
+			break;
+		}
+
+		/* new message */
+		ctx->cr.status = CLIENT_MSG_READY;
+		writer_publish_msg(ctx);
+	}
 }
 
 /*
@@ -120,7 +158,8 @@ on_transmission_notify(struct rpma_connection *conn, void *addr, size_t length, 
 static int
 writer_init(struct client_ctx *ctx)
 {
-
+	pthread_create(&ctx->thread, NULL, writer_thread_func,
+			ctx);
 }
 
 /*
@@ -129,7 +168,7 @@ writer_init(struct client_ctx *ctx)
 static int
 writer_fini(struct client_ctx *ctx)
 {
-
+	pthread_join(ctx->thread, NULL);
 }
 
 /*
@@ -166,6 +205,9 @@ process_hello(struct client_ctx *ctx, struct msg_t *msg)
 	/* initialize writer */
 	writer_init(ctx);
 
+	/* post back the recv msg - waiting for the mlog update */
+	rpma_connection_recv_post(ctx->conn, ctx->recv_msg);
+
 	/* prepare the hello message ACK */
 	struct msg_t *ack;
 	rpma_msg_get_ptr(ctx->send_msg, (void **)&ack);
@@ -184,9 +226,37 @@ process_hello(struct client_ctx *ctx, struct msg_t *msg)
 static int
 process_mlog_update(struct client_ctx *ctx, struct msg_t *msg)
 {
-	size_t end = msg->update.wptr;
-	ml_
-	rpma_connection_read(ctx->conn, ctx->ml_local, ctx->root->ml.
+	struct msg_log *ml = &ctx->root->ml;
+
+	/* calculate remote read parameters */
+	uintptr_t wptr = ml_get_wptr(ml);
+	size_t offset = ml_offset(ml, wptr);
+	size_t length = ml_offset(ml, msg->update.wptr) - offset;
+
+	/* read mlog data */
+	rpma_connection_read(ctx->conn,
+			ctx->ml_local, offset, ctx->ml_remote, offset, length);
+
+	/* progress the mlog write pointer */
+	ml_set_wptr(ml, msg->update.wptr);
+
+	/* post back the recv mlog update */
+	rpma_connection_recv_post(ctx->conn, ctx->recv_msg);
+
+	/* prepare the mlog update ack */
+	struct msg_t *ack;
+	rpma_msg_get_ptr(ctx->send_msg, (void **)&ack);
+
+	ack->base = MSG_TYPE_ACK;
+	ack->ack.original_msg_type = MSG_TYPE_HELLO;
+	ack->ack.status = 0;
+
+	rpma_connection_send(ctx->conn, ctx->send_msg);
+
+	/* display the mlog */
+	ml_read(ml);
+
+	return 0;
 }
 
 /*
