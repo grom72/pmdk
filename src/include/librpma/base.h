@@ -90,6 +90,8 @@ int rpma_connection_wait_for_shutdown(struct rpma_connection *conn);
 
 int rpma_connection_accept(struct rpma_connection *conn);
 
+int rpma_connection_reject(struct rpma_zone *zone);
+
 int rpma_connection_make(struct rpma_connection *conn);
 
 int rpma_connection_delete(struct rpma_connection **conn);
@@ -102,16 +104,22 @@ int rpma_connection_get_custom_data(struct rpma_connection *conn, void **data);
 
 /* connection loop */
 
-typedef int (*rpma_on_connection_func)(struct rpma_zone *zone, uint64_t event,
+typedef int (*rpma_on_connection_event_func)(struct rpma_zone *zone, uint64_t event,
 		struct rpma_connection *conn, void *uarg);
 
 int rpma_register_on_connection_event(struct rpma_zone *zone,
-		rpma_on_connection_func func);
+		rpma_on_connection_event_func func);
+
+typedef int (*rpma_on_connection_timeout_func)(struct rpma_zone *zone, void *uarg);
 
 int rpma_register_on_connection_timeout(struct rpma_zone *zone,
-		rpma_on_connection_func func);
+		rpma_on_connection_timeout_func func, int timeout);
+
+int rpma_connection_unregister_on_timeout(struct rpma_zone *zone);
 
 int rpma_connection_loop(struct rpma_zone *zone, void *uarg);
+
+int rpma_connection_loop_break(struct rpma_zone *zone);
 
 /* error handling */
 

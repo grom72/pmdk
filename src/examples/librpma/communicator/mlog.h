@@ -37,8 +37,16 @@
 #ifndef COMM_MLOG_H
 #define COMM_MLOG_H 1
 
-#include <pstructs.h>
+#include "pstructs.h"
 
-int ml_init(struct msg_log, size_t size);
+int ml_init(struct msg_log *ml, size_t size);
+
+int ml_ready(struct msg_log *ml);
+
+int mlog_append(struct msg_log *ml, uint64_t client_id, size_t msg_size, char *msg);
+
+uintptr_t ml_get_wptr(struct msg_log *ml);
+
+int ml_set_rptr(struct msg_log *ml, uintptr_t rptr);
 
 #endif /* mlog.h */

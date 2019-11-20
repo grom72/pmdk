@@ -55,8 +55,8 @@ struct msg_ack_t {
 
 /* hello message - sending the required identifiers */
 struct msg_hello_t {
-	struct rpma_lmr_id cr_id; /* client-row id */
-	struct rpma_lmr_id ml_id; /* the message log id */
+	struct rpma_memory_id cr_id; /* client-row id */
+	struct rpma_memory_id ml_id; /* the message log id */
 };
 
 /* message log update */

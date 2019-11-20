@@ -34,20 +34,26 @@
  * server.c -- librpma-based communicator server
  */
 
+#include <assert.h>
 #include <pthread.h>
 #include <semaphore.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 #include <libpmem.h>
 #include <librpma/base.h>
 #include <librpma/memory.h>
 #include <librpma/msg.h>
+#include <librpma/transmission.h>
 
 #include "pstructs.h"
+#include "mlog.h"
 #include "msgs.h"
 
 /* server-side assumptions */
@@ -67,7 +73,7 @@ struct root_obj {
 /* server-side client context */
 struct client_ctx {
 	uint64_t client_id;
-	const struct server_ctx *server;
+	struct server_ctx *server;
 
 	/* persistent client-row and its id */
 	struct client_row *cr;
@@ -120,7 +126,7 @@ distributor_notify(struct distributor_t *dist)
 static int
 distributor_trywait(struct distributor_t *dist)
 {
-	return sem_trywait(dist->notify);
+	return sem_trywait(&dist->notify);
 }
 
 /*
@@ -129,9 +135,11 @@ distributor_trywait(struct distributor_t *dist)
 static int
 distributor_wait_acks(struct distributor_t *dist, int nacks, struct server_ctx *ctx)
 {
+	int ret;
+
 	/* wait for the acks from the clients */
 	while (nacks > 0 && !ctx->exiting) {
-		ret = sem_trywait(dist->acks);
+		ret = sem_trywait(&dist->acks);
 		if (ret)
 			continue;
 		--nacks;
@@ -146,7 +154,7 @@ distributor_wait_acks(struct distributor_t *dist, int nacks, struct server_ctx *
 static void
 distributor_ack(struct distributor_t *dist)
 {
-	sem_post(dist->acks);
+	sem_post(&dist->acks);
 }
 
 /*
@@ -156,7 +164,7 @@ static void
 distributor_send(struct client_ctx *client, uintptr_t wptr)
 {
 	struct msg_t *msg;
-	rpma_msg_get_ptr(client->send_msg, &msg);
+	rpma_msg_get_ptr(client->send_msg, (void **)&msg);
 
 	/* prepare for the message ACK */
 	rpma_connection_recv_post(client->conn, client->recv_msg);
@@ -178,7 +186,7 @@ static void *
 distributor_thread_func(void *arg)
 {
 	struct server_ctx *ctx = (struct server_ctx *)arg;
-	struct distributor_t *dist = ctx->distributor;
+	struct distributor_t *dist = &ctx->distributor;
 	int ret;
 
 	while (!ctx->exiting) {
@@ -189,12 +197,11 @@ distributor_thread_func(void *arg)
 			continue;
 		}
 		/* no new messages */
-		if (!ml_ready(ctx->root->ml))
+		if (!ml_ready(&ctx->root->ml))
 			continue;
 
 		/* get current write pointer and # of acks to collect */
-		size_t wptr = ml_get_wptr(ctx->root->ml);
-		int ml_acks = ctx->nclients;
+		size_t wptr = ml_get_wptr(&ctx->root->ml);
 
 		/* send updates to the clients */
 		for (int i = 0; i < CLIENTS_MAX; ++i) {
@@ -207,7 +214,7 @@ distributor_thread_func(void *arg)
 		distributor_wait_acks(dist, ctx->nclients, ctx);
 
 		/* set read pointer */
-		ml_set_rptr(ctx->root->ml, wptr);
+		ml_set_rptr(&ctx->root->ml, wptr);
 	}
 
 	return NULL;
@@ -221,16 +228,16 @@ on_transmission_notify(struct rpma_connection *conn, void *addr, size_t length, 
 {
 	/* verify the client's message is ready */
 	struct client_row *cr = addr;
-	ASSERTeq(cr->status, CLIENT_MSG_READY);
+	assert(cr->status == CLIENT_MSG_READY);
 
 	/* obtain custom connection data - the client */
 	struct client_ctx *client;
-	rpma_connect_get_custom_data(conn, &client);
+	rpma_connection_get_custom_data(conn, (void **)&client);
 
 	/* append the client's message to ML */
 	struct msg_log *ml = &client->server->root->ml;
 	mlog_append(ml, client->client_id, cr->msg_size, cr->msg);
-	distributor_notify(client->server->distributor);
+	distributor_notify(&client->server->distributor);
 
 	/* set the message is already processed */
 	cr->status = CLIENT_MSG_DONE;
@@ -243,14 +250,14 @@ on_transmission_notify(struct rpma_connection *conn, void *addr, size_t length, 
  * on_transmission_recv_process_ack -- process an ACK message
  */
 static int
-on_transmission_recv_process_ack(union msg_t *msg, struct client_ctx *client)
+on_transmission_recv_process_ack(struct msg_t *msg, struct client_ctx *client)
 {
 	if (msg->ack.status != 0)
 		return msg->ack.status;
 
 	switch (msg->ack.original_msg_type) {
 	case MSG_TYPE_MLOG_UPDATE:
-		distributor_ack(client->server->distributor);
+		distributor_ack(&client->server->distributor);
 		return RPMA_E_OK;
 	default:
 		return RPMA_E_INVALID_MSG;
@@ -264,11 +271,11 @@ static int
 on_transmission_recv(struct rpma_connection *conn, struct rpma_msg *rmsg, size_t length, void *arg)
 {
 	struct client_ctx *client;
-	rpma_connection_get_custom_data(conn, &client);
+	rpma_connection_get_custom_data(conn, (void **)&client);
 
 	/* obtain a message content */
-	union msg_t *msg;
-	rpma_msg_get_ptr(rmsg, &msg);
+	struct msg_t *msg;
+	rpma_msg_get_ptr(rmsg, (void **)&msg);
 
 	/* process the message */
 	switch (msg->base.type) {
@@ -297,11 +304,11 @@ client_hello_init(struct client_ctx *client)
 
 	/* allocate the hello message */
 	rpma_msg_new(zone, RPMA_MSG_SEND, &client->send_msg);
-	rpma_msg_get_ptr(client->send_msg, &send);
+	rpma_msg_get_ptr(client->send_msg, (void **)&send);
 
 	/* send the hello message */
 	send->base.type = MSG_TYPE_HELLO;
-	memcpy(send->hello.cr_id, client->cr_id, sizeof(struct rpma_lmr_id));
+	memcpy(&send->hello.cr_id, &client->cr_id, sizeof(struct rpma_memory_id));
 	rpma_connection_send(client->conn, client->send_msg);
 }
 
@@ -336,20 +343,33 @@ client_thread_func(void *arg)
 	return NULL;
 }
 
+/*
+ * get_empty_client_row -- find first empty client row
+ */
+static struct client_ctx *
+get_empty_client_row(struct client_ctx clients[], uint64_t capacity)
+{
+	for (int i = 0; i < capacity; ++i) {
+		if (clients[i].conn == NULL)
+			return &clients[i];
+	}
+
+	return NULL;
+}
+
 #define RPMA_TIMEOUT (60) /* 1m */
 
 /*
  * on_connection_timeout -- connection timeout callback
  */
-static void
-on_connection_timeout(struct rpma_zone *zone)
+static int
+on_connection_timeout(struct rpma_zone *zone, void *uarg)
 {
-	struct server_ctx *ctx;
-	rpma_connection_get_custom_data(zone, &ctx);
+	struct server_ctx *ctx = uarg;
 	ctx->exiting = true; /* XXX atomic */
 
-	rpma_connection_loop_break(ctx);
-	return;
+	rpma_connection_loop_break(zone);
+	return 0;
 }
 
 /*
@@ -359,9 +379,8 @@ static int
 on_connection_event(struct rpma_zone *zone, uint64_t event,
 		struct rpma_connection *conn, void *uarg)
 {
-	struct server_ctx *ctx = arg;
+	struct server_ctx *ctx = uarg;
 	struct client_ctx *client;
-	int ret;
 
 	switch (event) {
 	case RPMA_CONNECTION_EVENT_INCOMING:
@@ -395,7 +414,7 @@ on_connection_event(struct rpma_zone *zone, uint64_t event,
 
 		/* break its loop and wait for the thread join */
 		rpma_transmission_loop_break(conn);
-		pthread_join(client->thread, &ret);
+		pthread_join(client->thread, NULL);
 
 		/* clean the RPMA connection resources */
 		rpma_connection_delete(&client->conn);
@@ -431,8 +450,7 @@ distributor_init(struct server_ctx *ctx)
 static void
 distributor_fini(struct server_ctx *ctx)
 {
-	int ret;
-	pthread_join(ctx->distributor.thread, &ret);
+	pthread_join(ctx->distributor.thread, NULL);
 	sem_destroy(&ctx->distributor.acks);
 	sem_destroy(&ctx->distributor.notify);
 }
@@ -448,7 +466,7 @@ clients_init(struct server_ctx *ctx)
 	ctx->nclients = 0;
 	for (int i = 0; i < CLIENTS_MAX; ++i) {
 		/* local part */
-		const struct client_ctx *client = &ctx->clients[i];
+		struct client_ctx *client = &ctx->clients[i];
 		client->client_id = i;
 		client->server = ctx;
 		client->cr = &ctx->root->cv[i];
@@ -488,7 +506,7 @@ remote_init(struct server_ctx *ctx, const char *addr, const char *service)
 	rpma_zone_new(cfg, &ctx->zone);
 
 	/* destroy RPMA configuration */
-	rpma_config_delete(cfg);
+	rpma_config_delete(&cfg);
 }
 
 /*
@@ -514,7 +532,7 @@ remote_main(struct server_ctx *ctx)
 static void
 remote_fini(struct server_ctx *ctx)
 {
-	rpma_zone_delete(ctx->zone);
+	rpma_zone_delete(&ctx->zone);
 }
 
 /*

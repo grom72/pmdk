@@ -37,7 +37,8 @@
 #ifndef COMM_PSTRUCTS_H
 #define COMM_PSTRUCTS_H 1
 
-#include "mlog.h"
+#include <stddef.h>
+#include <stdint.h>
 
 #define CLIENT_MSG_READY	1
 #define CLIENT_MSG_DONE	2
@@ -65,10 +66,5 @@ struct msg_log {
 
 #define MSG_LOG_SIZE(CAPACITY) \
 	(sizeof(struct msg_log) + sizeof(struct msg_row) * (CAPACITY))
-
-uint64_t get_empty_client_row(struct client_ctx *clients[], uint64_t capacity);
-
-int mlog_init(struct msg_log *ml, size_t size);
-int mlog_append(struct msg_log *ml, uint64_t client_id, size_t msg_size, char *msg);
 
 #endif /* pstructs.h */

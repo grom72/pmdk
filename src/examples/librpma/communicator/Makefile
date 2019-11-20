@@ -39,4 +39,4 @@ LIBS = -lrpma -lpmem -pthread
 
 include ../../Makefile.inc
 
-server: server.o pstructs.o
+server: server.o

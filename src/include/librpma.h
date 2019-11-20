@@ -44,5 +44,6 @@
 
 #include <librpma/msg.h>
 #include <librpma/rma.h>
+#include <librpma/transmission.h>
 
 #endif	/* librpma.h */
