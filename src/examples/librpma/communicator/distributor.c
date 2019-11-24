@@ -104,7 +104,7 @@ distributor_thread_func(void *arg)
 	struct distributor_t *dist = &svr->distributor;
 	int ret;
 
-	while (!svr->exiting) {
+	while (!svr->running) {
 		/* wait for new messages */
 		ret = distributor_trywait(dist);
 		if (ret) {

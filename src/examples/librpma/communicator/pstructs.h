@@ -51,19 +51,17 @@ enum client_status_t {
 #define USER_NAME_MAX (32)
 #define MSG_SIZE_MAX (4096)
 
-/* persistent space reserved for a client */
-struct client_row {
-	enum client_status_t status;
+/* a single message for the message log */
+struct msg_row {
 	char user[USER_NAME_MAX];
 	char msg[MSG_SIZE_MAX];
 	size_t msg_size;
 };
 
-/* a single message for the message log */
-struct msg_row {
-	char user[USER_NAME_MAX];
-	size_t msg_size;
-	char msg[MSG_SIZE_MAX];
+/* persistent space reserved for a client */
+struct client_row {
+	enum client_status_t status;
+	struct msg_row msg;
 };
 
 /* the message log root object */
@@ -103,5 +101,14 @@ struct root_obj {
 void pmem_init(struct root_obj **root_ptr, const char *path, size_t min_size);
 
 void pmem_fini(struct root_obj *root);
+
+struct client_row *p_get_empty_client_row(struct client_row rows[],
+		uint64_t n_rows);
+
+void p_client_init(struct client_row *cr);
+
+void p_client_pending(struct client_row *cr);
+
+void p_client_done(struct client_row *cr);
 
 #endif /* pstructs.h */

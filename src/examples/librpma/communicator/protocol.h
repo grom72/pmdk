@@ -80,9 +80,20 @@ struct hello_args_t {
 	struct rpma_memory_id *cr_id;
 };
 
-int proto_send_hello(struct rpma_connection *conn, void *uarg);
+int proto_hello(struct rpma_connection *conn, void *uarg);
 
-int proto_send_hello_ack(struct rpma_connection *conn, void *unused);
+struct hello_result_t {
+	uint64_t done;
+	struct rpma_memory_remote *cr;
+	struct rpma_memory_remote *ml;
+};
+
+int proto_hello_process(struct rpma_connection *conn, struct msg_t *msg,
+		struct hello_result_t *res);
+
+int proto_hello_cleanup(struct hello_result_t *res);
+
+int proto_hello_ack(struct rpma_connection *conn, void *unused);
 
 struct mlog_update_args_t {
 	uint64_t wptr;
@@ -90,13 +101,17 @@ struct mlog_update_args_t {
 
 int proto_mlog_update(struct rpma_connection *conn, void *uarg);
 
+int proto_mlog_update_process(struct msg_t *msg,
+		struct mlog_update_args_t *args, struct rpma_connection *conn,
+		struct rpma_sequence *seq);
+
 int proto_mlog_update_read(struct rpma_connection *conn, void *uarg);
 
 int proto_mlog_update_ack(struct rpma_connection *conn, void *uarg);
 
 int proto_bye_bye(struct rpma_connection *conn, void *unused);
 
-struct proto_write_msg_args_t {
+struct write_msg_args_t {
 	struct client_row *cr;
 	struct rpma_memory_remote *dst;
 	struct rpma_memory_local *src;
@@ -108,5 +123,30 @@ int proto_write_msg_and_user(struct rpma_connection *conn, void *uarg);
 int proto_write_msg_status(struct rpma_connection *conn, void *uarg);
 
 int proto_write_msg_signal(struct rpma_connection *conn, void *uarg);
+
+int proto_ack_process(struct msg_t *msg, uint64_t *original_msg_type);
+
+#define RPMA_TIMEOUT (60) /* 1m */
+
+void proto_common_init(struct rpma_zone **zone_ptr, const char *addr,
+		const char *service, size_t msg_size);
+
+void proto_common_fini(struct rpma_zone *zone);
+
+struct client_local_t {
+	struct msg_log *ml_ptr;
+	struct rpmem_memory_local *ml;
+	struct client_row *cr_ptr;
+	struct rpmem_memory_local *cr;
+
+	struct rpma_sequence *mlog_update_seq;
+	struct rpma_sequence *write_msg_seq;
+};
+
+void proto_client_init(struct rpma_zone *zone, struct client_local_t *cloc,
+	struct mlog_update_args_t *mlog_update_args,
+	struct write_msg_args_t *write_msg_args);
+
+void proto_client_fini(struct client_local_t *cloc);
 
 #endif /* protocol.h */

@@ -39,6 +39,9 @@
 #include "pstructs.h"
 #include "protocol.h"
 
+#define SEND_Q_LENGTH 10
+#define RECV_Q_LENGTH 10
+
 /*
  * proto_hello -- send MSG_TYPE_HELLO
  */
@@ -56,6 +59,39 @@ proto_hello(struct rpma_connection *conn, void *uarg)
 	/* send the hello message */
 	rpma_connection_send(conn, msg);
 
+	return RPMA_E_OK;
+}
+
+/*
+ * proto_hello_process -- process MSG_TYPE_HELLO
+ */
+int
+proto_hello_process(struct rpma_connection *conn, struct msg_t *msg,
+		struct hello_result_t *res)
+{
+	struct rpma_zone *zone = rpma_connection_get_zone(conn);
+
+	/* decode and allocate remote memory regions descriptor */
+	rpma_memory_remote_new(zone, &msg->hello.cr_id, &res->cr);
+	rpma_memory_remote_new(zone, &msg->hello.ml_id, &res->ml);
+	res->done = 1;
+
+	rpma_connection_enqueue(conn, proto_hello_ack, NULL);
+
+	return RPMA_E_OK;
+}
+
+/*
+ * proto_hello_cleanup -- process MSG_TYPE_HELLO - cleanup
+ */
+int
+proto_hello_cleanup(struct hello_result_t *res)
+{
+	if (!res->done)
+		return RPMA_E_OK;
+
+	rpma_memory_remote_delete(res->cr);
+	rpma_memory_remote_delete(res->ml);
 	return RPMA_E_OK;
 }
 
@@ -97,6 +133,22 @@ proto_mlog_update(struct rpma_connection *conn, void *uarg)
 	rpma_connection_send(conn, msg);
 
 	return RPMA_E_OK;
+}
+
+/*
+ * proto_mlog_update_process -- process MSG_TYPE_MLOG_UPDATE
+ */
+int
+proto_mlog_update_process(struct msg_t *msg, struct mlog_update_args_t *args,
+		struct rpma_connection *conn, struct rpma_sequence *seq)
+{
+	args->wptr = msg->update.wptr;
+	rpma_connection_enqueue_sequence(conn, seq);
+
+	/* display the mlog */
+	ml_read(ml); /* XXX move to the writer ? */
+
+	return 0;
 }
 
 /*
@@ -225,4 +277,97 @@ proto_write_msg_signal(struct rpma_connection *conn, void *uarg)
 	sem_post(args->done);
 
 	return RPMA_E_OK;
+}
+
+/*
+ * proto_ack_process -- process MSG_TYPE_ACK
+ */
+int
+proto_ack_process(struct msg_t *msg, uint64_t *original_msg_type)
+{
+	if (msg->ack.status != 0)
+		return msg->ack.status;
+
+	*original_msg_type = msg->ack.original_msg_type;
+
+	return RPMA_E_OK;
+}
+
+/*
+ * proto_common_init -- prepare RPMA zone
+ */
+void
+proto_common_init(struct rpma_zone **zone_ptr, const char *addr, const char *service, size_t msg_size)
+{
+	/* prepare RPMA configuration */
+	struct rpma_config *cfg;
+	rpma_config_new(&cfg);
+	rpma_config_set_addr(cfg, addr);
+	rpma_config_set_service(cfg, service);
+	rpma_config_set_msg_size(cfg, msg_size);
+	rpma_config_set_send_queue_length(cfg, SEND_Q_LENGTH);
+	rpma_config_set_recv_queue_length(cfg, RECV_Q_LENGTH);
+	rpma_config_set_queue_alloc_funcs(cfg, malloc, free);
+
+	/* allocate RPMA zone */
+	struct rpma_zone *zone;
+	rpma_zone_new(cfg, &zone);
+
+	/* delete RPMA configuration */
+	rpma_config_delete(&cfg);
+
+	*zone_ptr = zone;
+}
+
+/*
+ * proto_common_fini -- delete RPMA zone
+ */
+void
+proto_common_fini(struct rpma_zone *zone)
+{
+	rpma_zone_delete(&zone);
+}
+
+/*
+ * proto_client_init -- initialize client's RPMA resources
+ */
+void
+proto_client_init(struct rpma_zone *zone, struct r_client_local_t *cloc,
+		struct mlog_update_args_t *mlog_update_args,
+		struct write_msg_args_t *write_msg_args)
+{
+	/* register local memory regions */
+	rpma_memory_local_new(zone, cloc->ml_ptr, MSG_LOG_SIZE(cloc->ml->capacity),
+			RPMA_MR_READ_DST, &cloc->ml);
+	rpma_memory_local_new(zone, cloc->cr_ptr, sizeof(*cloc->cr),
+			RPMA_MR_WRITE_SRC, &cloc->cr);
+
+	/* allocate mlog update sequence */
+	struct rpma_sequence *seq;
+	rpma_sequence_new(&seq);
+	rpma_sequence_add_step(seq, proto_mlog_update_read, mlog_update_args);
+	rpma_sequence_add_step(seq, proto_mlog_update_ack, mlog_update_args);
+	cloc->mlog_update_seq = seq;
+
+	/* allocate write msg sequence */
+	rpma_sequence_new(&seq);
+	rpma_sequence_add_step(seq, proto_write_msg_and_user, write_msg_args);
+	rpma_sequence_add_step(seq, proto_write_msg_status, write_msg_args);
+	rpma_sequence_add_step(seq, proto_write_msg_signal, write_msg_args);
+	cloc->write_msg_seq = seq;
+}
+
+/*
+ * proto_client_fini -- delete client's RPMA resources
+ */
+void
+proto_client_fini(struct r_client_local_t *cloc)
+{
+	/* deallocate sequences */
+	rpma_sequence_delete(cloc->write_msg_seq);
+	rpma_sequence_delete(cloc->mlog_update_seq);
+
+	/* deallocate local memory regions */
+	rpma_memory_local_delete(&cloc->cr_local);
+	rpma_memory_local_delete(&cloc->ml_local);
 }

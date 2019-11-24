@@ -51,7 +51,6 @@
 
 #include "pstructs.h"
 #include "protocol.h"
-#include "remote.h"
 
 /* client-side assumptions */
 #define MSG_LOG_MIN_CAPACITY (1000)
@@ -67,26 +66,22 @@ struct client_ctx {
 
 	struct worker_ctx *wrk;
 	uint64_t running;
-	uint64_t hello_done;
 
-	/* persistent data and its derivatives */
+	/* persistent data */
 	struct root_obj *root;
-	struct rpma_memory_local *ml_local; /* client side mlog */
-	struct rpma_memory_remote *ml_remote; /* server side mlog */
 
 	/* transient data */
 	struct client_row cr;
-	struct rpma_memory_local *cr_local; /* client side cr */
-	struct rpma_memory_remote *cr_remote; /* server side cr */
+
+	struct hello_result_t remote;
+	struct client_local_t local;
 
 	struct writer_t {
 		pthread_t thread;
 		sem_t done;
 	} writer;
 
-	struct rpma_sequence *mlog_update_seq;
 	struct mlog_update_args_t mlog_update_args;
-	struct rpma_sequence *write_msg_seq;
 	struct proto_write_msg_args_t write_msg_args;
 };
 
@@ -94,54 +89,20 @@ struct client_ctx {
  * on_connection_recv_process_ack -- process an ACK message
  */
 static int
-on_connection_recv_process_ack(struct client_ctx *ctx, union msg_t *msg)
+on_connection_recv_process_ack(struct client_ctx *ctx, struct msg_t *msg)
 {
-	if (msg->ack.status != 0)
-		return msg->ack.status;
+	uint64_t original_msg_type = -1;
+	int ret;
+	if ((ret = proto_ack_process(msg, &original_msg_type)))
+		return ret;
 
-	switch (msg->ack.original_msg_type) {
+	switch (original_msg_type) {
 	case MSG_TYPE_BYE_BYE:
 		writer_fini(ctx);
 		return RPMA_E_OK;
 	default:
 		return RPMA_E_INVALID_MSG;
 	}
-}
-
-/*
- * process_hello -- process MSG_TYPE_HELLO
- */
-static int
-process_hello(struct client_ctx *clnt, struct msg_t *msg)
-{
-	struct rpma_zone *zone = clnt->zone;
-
-	/* decode and allocate remote memory regions descriptor */
-	rpma_memory_remote_new(zone, &msg->hello.cr_id, &clnt->cr_remote);
-	rpma_memory_remote_new(zone, &msg->hello.ml_id, &clnt->ml_remote);
-	clnt->hello_done = 1;
-
-	/* initialize writer */
-	writer_init(clnt);
-
-	rpma_connection_enqueue(clnt->conn, proto_hello_ack, NULL);
-
-	return RPMA_E_OK;
-}
-
-/*
- * process_hello -- process MSG_TYPE_MLOG_UPDATE
- */
-static int
-process_mlog_update(struct client_ctx *clnt, struct msg_t *msg)
-{
-	clnt->mlog_update_args.wptr = msg->update.wptr;
-	rpma_connection_enqueue_sequence(clnt->conn, clnt->mlog_update_seq);
-
-	/* display the mlog */
-	ml_read(ml); /* XXX move to the writer ? */
-
-	return 0;
 }
 
 /*
@@ -161,12 +122,17 @@ on_connection_recv(struct rpma_connection *conn, struct rpma_msg *rmsg, size_t l
 	case MSG_TYPE_ACK:
 		return on_connection_recv_process_ack(clnt, msg);
 	case MSG_TYPE_HELLO:
-		return process_hello(clnt, msg);
+		proto_hello_process(clnt->conn, msg, &clnt->remote);
+		break;
 	case MSG_TYPE_MLOG_UPDATE:
-		return process_mlog_update(clnt, msg);
+		proto_mlog_update_process(msg, &clnt->mlog_update_args, clnt->conn,
+				clnt->local.mlog_update_seq);
+		break;
 	default:
 		return RPMA_E_INVALID_MSG;
 	}
+
+	return RPMA_E_OK;
 }
 
 /*
@@ -204,9 +170,6 @@ on_connection_event(struct rpma_zone *zone, uint64_t event,
 		break;
 
 	case RPMA_CONNECTION_EVENT_DISCONNECT:
-		/* get client data from the connection */
-		rpma_connection_get_custom_data(conn, (void **)&clnt);
-
 		/* clean the RPMA connection resources */
 		rpma_connection_detach(clnt->conn);
 		rpma_connection_delete(&clnt->conn);
@@ -229,26 +192,10 @@ remote_main(struct client_ctx *clnt)
 {
 	struct rpma_zone *zone = clnt->zone;
 
-	/* register local memory regions */
-	rpma_memory_local_new(zone, &clnt->root->ml,
-			MSG_LOG_SIZE(clnt->root->ml.capacity), RPMA_MR_READ_DST,
-			&clnt->ml_local);
-	rpma_memory_local_new(zone, &clnt->cr, sizeof(clnt->cr),
-			RPMA_MR_WRITE_SRC, &clnt->cr_local);
-
-	/* allocate mlog update sequence */
-	struct rpma_sequence *seq;
-	rpma_sequence_new(&seq);
-	rpma_sequence_add_step(seq, proto_mlog_update_read, &clnt->mlog_update_args);
-	rpma_sequence_add_step(seq, proto_mlog_update_ack, &clnt->mlog_update_args);
-	clnt->mlog_update_seq = seq;
-
-	/* allocate write msg sequence */
-	rpma_sequence_new(&seq);
-	rpma_sequence_add_step(seq, proto_write_msg_and_user, &clnt->write_msg_args);
-	rpma_sequence_add_step(seq, proto_write_msg_status, &clnt->write_msg_args);
-	rpma_sequence_add_step(seq, proto_write_msg_signal, &clnt->write_msg_args);
-	clnt->write_msg_seq = seq;
+	clnt->local.cr = &clnt->cr;
+	clnt->local.ml = &clnt->root->ml;
+	proto_client_init(zone, &clnt->local, &clnt->mlog_update_args,
+			&clnt->write_msg_args);
 
 	/* RPMA registers callbacks and start looping */
 	rpma_register_on_connection_event(zone, on_connection_event);
@@ -257,19 +204,8 @@ remote_main(struct client_ctx *clnt)
 	/* no listenning zone will try to establish a connection */
 	rpma_connection_loop(zone, clnt);
 
-	/* deallocate sequences */
-	rpma_sequence_delete(clnt->write_msg_seq);
-	rpma_sequence_delete(clnt->mlog_update_seq);
-
-	/* deallocate remote memory regions */
-	if (clnt->hello_done) {
-		rpma_memory_remote_delete(&clnt->cr_remote);
-		rpma_memory_remote_delete(&clnt->ml_remote);
-	}
-
-	/* deallocate local memory regions */
-	rpma_memory_local_delete(&clnt->cr_local);
-	rpma_memory_local_delete(&clnt->ml_local);
+	proto_hello_cleanup(clnt->remote);
+	proto_client_fini(&clnt->local);
 }
 
 /*
@@ -278,13 +214,13 @@ remote_main(struct client_ctx *clnt)
 static void
 writer_publish_msg(struct client_ctx *clnt)
 {
-	struct proto_write_msg_args_t *args = &clnt->write_msg_args;
+	struct write_msg_args_t *args = &clnt->write_msg_args;
 	args.cr = &clnt->cr;
-	args.dst = clnt->cr_remote;
-	args.src = clnt->cr_local;
+	args.dst = clnt->remote.cr;
+	args.src = clnt->local.cr;
 	args.done = &clnt->writer.done;
 
-	rpma_connection_enqueue_sequence(clnt->conn, clnt->write_msg_seq);
+	rpma_connection_enqueue_sequence(clnt->conn, clnt->local.write_msg_seq);
 
 	sem_wait(args->done);
 }
@@ -311,7 +247,7 @@ writer_thread_func(void *arg)
 		}
 
 		/* new message */
-		clnt->cr.status = CLIENT_MSG_PENDING;
+		p_client_pending(&clnt->cr);
 		writer_publish_msg(clnt);
 	}
 
@@ -324,7 +260,7 @@ writer_thread_func(void *arg)
 static void
 writer_init(struct client_ctx *clnt)
 {
-	pthread_cond_init(&clnt->writer.cond);
+	sem_init(&clnt->writer.done);
 	pthread_create(&clnt->writer.thread, NULL, writer_thread_func,
 			clnt);
 }
@@ -336,7 +272,7 @@ static void
 writer_fini(struct client_ctx *clnt)
 {
 	pthread_join(clnt->writer.thread, NULL);
-	pthread_cond_destroy(&clnt->writer.cond);
+	pthread_cond_destroy(&clnt->writer.done);
 }
 
 int
@@ -349,15 +285,15 @@ main(int argc, char *argv[])
 	struct client_ctx clnt = {0};
 
 	pmem_init(&clnt->root, path, POOL_MIN_SIZE);
-	remote_init(&clnt, addr, service);
+	proto_common_init(&clnt, addr, service);
 	workers_init(clnt->zone, &clnt->wrk, 1);
 	writer_init(clnt);
 
 	remote_main(&clnt);
 
 	writer_fini(clnt);
-	workers_init(clnt->wrk, 1)
-	remote_fini(&clnt);
+	workers_fini(clnt->wrk, 1)
+	proto_common_fini(&clnt);
 	pmem_fini(clnt->root);
 
 	return 0;

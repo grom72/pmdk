@@ -53,7 +53,6 @@ struct server_ctx {
 
 	uint64_t nclients; /* current # of clients */
 
-
 	struct distributor_t *distributor;
 };
 

@@ -81,3 +81,47 @@ pmem_fini(struct root_obj *root)
 {
 	pmem_unmap(root, root->total_size);
 }
+
+/*
+ * get_empty_client_row -- find first empty client row
+ */
+struct client_row *
+p_get_empty_client_row(struct client_row rows[], uint64_t n_rows)
+{
+	for (uint64_t i = 0; i < n_rows; ++i) {
+		if (rows[i].status == NO_CLIENT)
+			return &rows[i];
+	}
+
+	return NULL;
+}
+
+/*
+ * p_client_init -- initialize client row's persistent state
+ */
+void
+p_client_init(struct client_row *cr)
+{
+	cr->status = CLIENT_NO_MSG;
+	pmem_persist(&cr->status, sizeof(cr->status));
+}
+
+/*
+ * p_client_pending -- mark the client's msg is pending
+ */
+void
+p_client_pending(struct client_row *cr)
+{
+	cr->status = CLIENT_MSG_PENDING;
+	pmem_persist(&cr->status, sizeof(cr->status));
+}
+
+/*
+ * p_client_done -- mark the client's msg is done
+ */
+void
+p_client_done(struct client_row *cr)
+{
+	cr->status = CLIENT_MSG_DONE;
+	pmem_persist(&cr->status, sizeof(cr->status));
+}

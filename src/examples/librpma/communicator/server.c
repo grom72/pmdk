@@ -56,7 +56,6 @@
 #include "protocol.h"
 #include "distributor.h"
 #include "workers.h"
-#include "remote.h"
 #include "server.h"
 
 /* server-side assumptions */
@@ -113,10 +112,12 @@ on_connection_notify(struct rpma_connection *conn, void *ptr, size_t length, voi
 static int
 on_connection_recv_process_ack(struct msg_t *msg, struct client_ctx *clnt)
 {
-	if (msg->ack.status != 0)
-		return msg->ack.status;
+	uint64_t original_msg_type = MSG_TYPE_INVALID;
+	int ret;
+	if (ret = proto_ack_process(msg, &original_msg_type))
+		return ret;
 
-	switch (msg->ack.original_msg_type) {
+	switch (original_msg_type) {
 	case MSG_TYPE_MLOG_UPDATE:
 		distributor_ack(&clnt->svr->distributor);
 		return RPMA_E_OK;
@@ -159,6 +160,9 @@ client_init(struct server_ctx *svr, struct worker_ctx *wrk,
 	clnt->wrk = wrk;
 	clnt->cr = cr;
 	clnt->conn = NULL;
+
+	p_client_init(cr);
+
 	/* RPMA part - client's row registration & id */
 	rpma_memory_local_new(svr->zone, clnt->cr, sizeof(*cr),
 			RPMA_MR_WRITE_DST, &clnt->cr_mr);
@@ -177,20 +181,6 @@ client_fini(struct client_ctx *clnt)
 	rpma_memory_local_delete(&clnt->cr_mr);
 
 	free(clnt);
-}
-
-/*
- * get_empty_client_row -- find first empty client row
- */
-static struct client_row *
-get_empty_client_row(struct client_row rows[], uint64_t n_rows)
-{
-	for (uint64_t i = 0; i < n_rows; ++i) {
-		if (rows[i].status == NO_CLIENT)
-			return &rows[i];
-	}
-
-	return NULL;
 }
 
 /*
@@ -222,7 +212,7 @@ on_connection_event(struct rpma_zone *zone, uint64_t event,
 		++svr->nclients;
 
 		/* allocate client context */
-		cr = get_empty_client_row(svr->clients, svr->nclient_rows);
+		cr = p_get_empty_client_row(svr->clients, svr->nclient_rows);
 		clnt = client_init(svr, worker_next(svr->workers, WORKERS_MASK), cr);
 
 		/* accept the incoming connection */
@@ -300,7 +290,7 @@ main(int argc, char *argv[])
 	struct server_ctx svr = {0};
 
 	pmem_init(&svr->root, path, POOL_MIN_SIZE);
-	remote_init(&svr, addr, service);
+	proto_init(&svr, addr, service);
 	workers_init(svr->zone, &svr->workers, N_WORKERS);
 	distributor_init(&svr->distributor, &svr);
 
@@ -308,7 +298,7 @@ main(int argc, char *argv[])
 
 	distributor_fini(svr->distributor);
 	workers_fini(svr->workers);
-	remote_fini(&svr);
+	proto_fini(&svr);
 	pmem_fini(svr->root);
 
 	return 0;
