@@ -31,46 +31,18 @@
  */
 
 /*
- * librpma/transmission.h -- base definitions of librpma entry points (EXPERIMENTAL)
- *
- * This library provides low-level support for remote access to persistent
- * memory utilizing RDMA-capable RNICs.
- *
- * See librpma(7) for details.
+ * distributor.h -- librpma-based communicator server
  */
 
-#ifndef LIBRPMA_TRANSMISSION_H
-#define LIBRPMA_TRANSMISSION_H 1
+#ifndef COMM_WORKERS_H
+#define COMM_WORKERS_H 1
 
-#include <stddef.h>
-#include <stdint.h>
+struct worker_ctx;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+void workers_init(struct worker_ctx **w_ptr);
 
-#include <librpma/base.h>
-#include <librpma/msg.h>
+void workers_fini(struct worker_ctx *ws);
 
-typedef int (*rpma_on_transmission_notify_func)(struct rpma_connection *conn,
-	void *addr, size_t len, void *uarg);
+struct worker *worker_next(struct worker_ctx *ws);
 
-int rpma_transmission_register_on_notify(struct rpma_connection *conn,
-	rpma_on_transmission_notify_func func);
-
-typedef int (*rpma_on_transmission_recv_func)(struct rpma_connection *conn,
-	struct rpma_msg *msg, size_t length, void *uarg);
-
-int rpma_transmission_register_on_recv(struct rpma_connection *conn,
-	rpma_on_transmission_recv_func func);
-
-int rpma_transmission_loop(struct rpma_connection *conn, void *uarg);
-
-int rpma_transmission_loop_break(struct rpma_connection *conn);
-
-typedef int (*rpma_queue_func)(struct rpma_connection *conn, void *uarg);
-
-#ifdef __cplusplus
-}
-#endif
-#endif	/* librpma/transmission.h */
+#endif /* workers.h */

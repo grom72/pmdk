@@ -31,11 +31,13 @@
  */
 
 /*
- * msgs.h -- messages
+ * protocol.h -- communication protocol definitions
  */
 
-#ifndef COMM_MSGS_H
-#define COMM_MSGS_H 1
+#ifndef COMM_PROTOCOL_H
+#define COMM_PROTOCOL_H 1
+
+#include <semaphore.h>
 
 #define MSG_TYPE_ACK		1
 #define MSG_TYPE_HELLO		2
@@ -74,4 +76,37 @@ struct msg_t {
 	};
 };
 
-#endif /* msgs.h */
+struct hello_args_t {
+	struct rpma_memory_id *cr_id;
+};
+
+int proto_send_hello(struct rpma_connection *conn, void *uarg);
+
+int proto_send_hello_ack(struct rpma_connection *conn, void *unused);
+
+struct mlog_update_args_t {
+	uint64_t wptr;
+};
+
+int proto_mlog_update(struct rpma_connection *conn, void *uarg);
+
+int proto_mlog_update_read(struct rpma_connection *conn, void *uarg);
+
+int proto_mlog_update_ack(struct rpma_connection *conn, void *uarg);
+
+int proto_bye_bye(struct rpma_connection *conn, void *unused);
+
+struct proto_write_msg_args_t {
+	struct client_row *cr;
+	struct rpma_memory_remote *dst;
+	struct rpma_memory_local *src;
+	sem_t *done;
+};
+
+int proto_write_msg_and_user(struct rpma_connection *conn, void *uarg);
+
+int proto_write_msg_status(struct rpma_connection *conn, void *uarg);
+
+int proto_write_msg_signal(struct rpma_connection *conn, void *uarg);
+
+#endif /* protocol.h */

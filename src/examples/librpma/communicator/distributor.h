@@ -31,46 +31,20 @@
  */
 
 /*
- * librpma/transmission.h -- base definitions of librpma entry points (EXPERIMENTAL)
- *
- * This library provides low-level support for remote access to persistent
- * memory utilizing RDMA-capable RNICs.
- *
- * See librpma(7) for details.
+ * distributor.h -- msg distributor for librpma-based communicator server
  */
 
-#ifndef LIBRPMA_TRANSMISSION_H
-#define LIBRPMA_TRANSMISSION_H 1
+#ifndef COMM_DISTRIBUTOR_H
+#define COMM_DISTRIBUTOR_H 1
 
-#include <stddef.h>
-#include <stdint.h>
+struct distributor_t;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+void distributor_notify(struct distributor_t *dist);
 
-#include <librpma/base.h>
-#include <librpma/msg.h>
+void distributor_ack(struct distributor_t *dist);
 
-typedef int (*rpma_on_transmission_notify_func)(struct rpma_connection *conn,
-	void *addr, size_t len, void *uarg);
+void distributor_init(struct server_ctx *svr);
 
-int rpma_transmission_register_on_notify(struct rpma_connection *conn,
-	rpma_on_transmission_notify_func func);
+void distributor_fini(struct server_ctx *svr);
 
-typedef int (*rpma_on_transmission_recv_func)(struct rpma_connection *conn,
-	struct rpma_msg *msg, size_t length, void *uarg);
-
-int rpma_transmission_register_on_recv(struct rpma_connection *conn,
-	rpma_on_transmission_recv_func func);
-
-int rpma_transmission_loop(struct rpma_connection *conn, void *uarg);
-
-int rpma_transmission_loop_break(struct rpma_connection *conn);
-
-typedef int (*rpma_queue_func)(struct rpma_connection *conn, void *uarg);
-
-#ifdef __cplusplus
-}
-#endif
-#endif	/* librpma/transmission.h */
+#endif /* distributor.h */

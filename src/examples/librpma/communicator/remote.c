@@ -31,46 +31,45 @@
  */
 
 /*
- * librpma/transmission.h -- base definitions of librpma entry points (EXPERIMENTAL)
- *
- * This library provides low-level support for remote access to persistent
- * memory utilizing RDMA-capable RNICs.
- *
- * See librpma(7) for details.
+ * remote.c -- common communication parts for librpma-based communicator
  */
 
-#ifndef LIBRPMA_TRANSMISSION_H
-#define LIBRPMA_TRANSMISSION_H 1
+#include <stdlib.h>
 
-#include <stddef.h>
-#include <stdint.h>
+#define SEND_Q_LENGTH 10
+#define RECV_Q_LENGTH 10
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+/*
+ * remote_init -- prepare RPMA zone
+ */
+void
+remote_init(struct rpma_zone **zone_ptr, const char *addr, const char *service, size_t msg_size)
+{
+	/* prepare RPMA configuration */
+	struct rpma_config *cfg;
+	rpma_config_new(&cfg);
+	rpma_config_set_addr(cfg, addr);
+	rpma_config_set_service(cfg, service);
+	rpma_config_set_msg_size(cfg, msg_size);
+	rpma_config_set_send_queue_length(cfg, SEND_Q_LENGTH);
+	rpma_config_set_recv_queue_length(cfg, RECV_Q_LENGTH);
+	rpma_config_set_queue_alloc_funcs(cfg, malloc, free);
 
-#include <librpma/base.h>
-#include <librpma/msg.h>
+	/* allocate RPMA zone */
+	struct rpma_zone *zone;
+	rpma_zone_new(cfg, &zone);
 
-typedef int (*rpma_on_transmission_notify_func)(struct rpma_connection *conn,
-	void *addr, size_t len, void *uarg);
+	/* delete RPMA configuration */
+	rpma_config_delete(&cfg);
 
-int rpma_transmission_register_on_notify(struct rpma_connection *conn,
-	rpma_on_transmission_notify_func func);
-
-typedef int (*rpma_on_transmission_recv_func)(struct rpma_connection *conn,
-	struct rpma_msg *msg, size_t length, void *uarg);
-
-int rpma_transmission_register_on_recv(struct rpma_connection *conn,
-	rpma_on_transmission_recv_func func);
-
-int rpma_transmission_loop(struct rpma_connection *conn, void *uarg);
-
-int rpma_transmission_loop_break(struct rpma_connection *conn);
-
-typedef int (*rpma_queue_func)(struct rpma_connection *conn, void *uarg);
-
-#ifdef __cplusplus
+	*zone_ptr = zone;
 }
-#endif
-#endif	/* librpma/transmission.h */
+
+/*
+ * remote_fini -- delete RPMA zone
+ */
+void
+remote_fini(struct rpma_zone *zone)
+{
+	rpma_zone_delete(&zone);
+}

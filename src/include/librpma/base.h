@@ -78,7 +78,8 @@ int rpma_zone_delete(struct rpma_zone **zone);
 /* connection setup */
 
 #define RPMA_CONNECTION_EVENT_INCOMING		0
-#define RPMA_CONNECTION_EVENT_DISCONNECT	1
+#define RPMA_CONNECTION_EVENT_OUTGOING		1
+#define RPMA_CONNECTION_EVENT_DISCONNECT	2
 
 struct rpma_connection;
 

@@ -40,23 +40,33 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define CLIENT_MSG_READY	1
-#define CLIENT_MSG_DONE	2
+/* status of the client row */
+enum client_status_t {
+	NO_CLIENT,
+	CLIENT_NO_MSG,
+	CLIENT_MSG_PENDING,
+	CLIENT_MSG_DONE
+};
 
+#define USER_NAME_MAX (32)
 #define MSG_SIZE_MAX (4096)
 
+/* persistent space reserved for a client */
 struct client_row {
-	uint64_t status;
-	size_t msg_size;
+	enum client_status_t status;
+	char user[USER_NAME_MAX];
 	char msg[MSG_SIZE_MAX];
+	size_t msg_size;
 };
 
+/* a single message for the message log */
 struct msg_row {
-	uint64_t client_id;
+	char user[USER_NAME_MAX];
 	size_t msg_size;
 	char msg[MSG_SIZE_MAX];
 };
 
+/* the message log root object */
 struct msg_log {
 	uint64_t write_ptr;
 	uint64_t read_ptr;
@@ -64,7 +74,34 @@ struct msg_log {
 	struct msg_row msgs[];
 };
 
+/* size of the message log in bytes */
 #define MSG_LOG_SIZE(CAPACITY) \
 	(sizeof(struct msg_log) + sizeof(struct msg_row) * (CAPACITY))
+
+int ml_init(struct msg_log *ml, size_t size);
+
+int ml_ready(struct msg_log *ml);
+
+int mlog_append(struct msg_log *ml, uint64_t client_id, size_t msg_size, char *msg);
+
+uintptr_t ml_get_wptr(struct msg_log *ml);
+
+int ml_set_rptr(struct msg_log *ml, uintptr_t rptr);
+
+int ml_set_wptr(struct msg_log *ml, uintptr_t wptr);
+
+size_t ml_offset(struct msg_log *ml, uintptr_t ptr);
+
+uintptr_t ml_read(struct msg_log *ml);
+
+/* root object - common for server and client */
+struct root_obj {
+	size_t total_size; /* total size of the memory pool */
+	struct msg_log ml;
+};
+
+void pmem_init(struct root_obj **root_ptr, const char *path, size_t min_size);
+
+void pmem_fini(struct root_obj *root);
 
 #endif /* pstructs.h */

@@ -31,46 +31,53 @@
  */
 
 /*
- * librpma/transmission.h -- base definitions of librpma entry points (EXPERIMENTAL)
- *
- * This library provides low-level support for remote access to persistent
- * memory utilizing RDMA-capable RNICs.
- *
- * See librpma(7) for details.
+ * pstructs.c -- persistent ops for librpma-based communicator
  */
 
-#ifndef LIBRPMA_TRANSMISSION_H
-#define LIBRPMA_TRANSMISSION_H 1
+#include <libpmem.h>
 
-#include <stddef.h>
-#include <stdint.h>
+#include "pstructs.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include <librpma/base.h>
-#include <librpma/msg.h>
-
-typedef int (*rpma_on_transmission_notify_func)(struct rpma_connection *conn,
-	void *addr, size_t len, void *uarg);
-
-int rpma_transmission_register_on_notify(struct rpma_connection *conn,
-	rpma_on_transmission_notify_func func);
-
-typedef int (*rpma_on_transmission_recv_func)(struct rpma_connection *conn,
-	struct rpma_msg *msg, size_t length, void *uarg);
-
-int rpma_transmission_register_on_recv(struct rpma_connection *conn,
-	rpma_on_transmission_recv_func func);
-
-int rpma_transmission_loop(struct rpma_connection *conn, void *uarg);
-
-int rpma_transmission_loop_break(struct rpma_connection *conn);
-
-typedef int (*rpma_queue_func)(struct rpma_connection *conn, void *uarg);
-
-#ifdef __cplusplus
+/*
+ * pmem_restore -- (internal) restore from the persistent state
+ */
+static void
+pmem_restore(struct root_obj *root)
+{
+	// XXX
 }
-#endif
-#endif	/* librpma/transmission.h */
+
+/*
+ * pmem_init -- map the server root object
+ */
+void
+pmem_init(struct root_obj **root_ptr, const char *path, size_t min_size)
+{
+	size_t total_size = 0;
+	struct root_obj *root = pmem_map_file(path, min_size,
+			PMEM_FILE_CREATE, O_RDWR, &total_size, NULL);
+	if (!root->total_size) {
+		// initialize persistent state
+		const size_t ml_offset = offsetof(struct root_obj, ml);
+		size_t ml_size = total_size - ml_offset;
+		ml_init(&root->ml, ml_size);
+
+		// valid total size indicates the persistent state is valid
+		root->total_size = total_size;
+		pmem_persist(&root->total_size, sizeof(total_size));
+	} else {
+		assert(root->total_size == total_size);
+		pmem_restore(root);
+	}
+
+	*root_ptr = root;
+}
+
+/*
+ * pmem_fini -- unmap the persistent part
+ */
+void
+pmem_fini(struct root_obj *root)
+{
+	pmem_unmap(root, root->total_size);
+}

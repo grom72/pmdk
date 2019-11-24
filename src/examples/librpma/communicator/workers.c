@@ -31,28 +31,75 @@
  */
 
 /*
- * mlog.h -- message log
+ * workers.c -- workers for librpma-based communicator server
  */
 
-#ifndef COMM_MLOG_H
-#define COMM_MLOG_H 1
+#include "workers.h"
 
-#include "pstructs.h"
+/* worker context */
+struct worker_ctx {
+	uint64_t running;
 
-int ml_init(struct msg_log *ml, size_t size);
+	struct rpma_dispatcher *disp;
+	pthread_t thread;
+};
 
-int ml_ready(struct msg_log *ml);
+/*
+ * worker_thread_func -- (internal) worker thread main function
+ */
+static void *
+worker_thread_func(void *arg)
+{
+	struct worker_ctx *w = arg;
 
-int mlog_append(struct msg_log *ml, uint64_t client_id, size_t msg_size, char *msg);
+	while (w->running) { // XXX atomic
+		// XXX timeout
+		rpma_dispatch(w->disp);
+	}
 
-uintptr_t ml_get_wptr(struct msg_log *ml);
+	return NULL;
+}
 
-int ml_set_rptr(struct msg_log *ml, uintptr_t rptr);
+/*
+ * workers_init -- initialize worker threads
+ */
+void
+workers_init(struct rpma_zone *zone, struct worker_ctx *w_ptr,
+		uint64_t nworkers)
+{
+	struct worker_ctx *ws = malloc(nworkers * sizeof(*ws));
 
-int ml_set_wptr(struct msg_log *ml, uintptr_t wptr);
+	for (int i = 0; i < nworkers; ++i) {
+		struct worker_ctx *w = &ws[i];
 
-size_t ml_offset(struct msg_log *ml, uintptr_t ptr);
+		rpma_dispatcher_new(zone, &w->disp);
+		pthread_create(&w->thread, NULL, worker_thread_func, w);
+	}
+}
 
-uintptr_t ml_read(struct msg_log *ml);
+/*
+ * workers_fini -- finalize worker threads
+ */
+void
+workers_fini(struct worker_ctx *ws, uint64_t nworkers)
+{
+	for (int i = 0; i < nworkers; ++i) {
+		struct worker_ctx *w = &ws[i];
+		w->running = 0; // XXX atomic
+		pthread_join(w->thread, NULL);
+	}
 
-#endif /* mlog.h */
+	free(ws);
+}
+
+/*
+ * worker_next -- selects the next worker for the client connection
+ * in a round robin fashion
+ */
+struct worker *
+worker_next(struct worker_ctx *ws, uint64_t mask)
+{
+	static uint64_t worker_id = 0;
+
+	return &ws[__sync_fetch_and_add(&worker_id, 1) & mask];
+}
