@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019, Intel Corporation
+ * Copyright 2016-2020, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -1418,18 +1418,25 @@ rpmem_fip_flush_gpspm(struct rpmem_fip *fip, size_t offset,
 {
 	/* Limit len to the max value of the return type. */
 	len = min(len, SSIZE_MAX);
+	unsigned mode = flags & RPMEM_FLUSH_PERSIST_MASK;
 
 	int ret = rpmem_fip_wq_flush_check(fip, &fip->lanes[lane], &flags);
 	if (unlikely(ret))
 		return -abs(ret);
 
-	/*
-	 * Probably splitting Send-after-Write into two stages (flush + drain)
-	 * will give some performance gains also for GPSPM mode.
-	 * Since for now GPSPM mode is considered auxiliary and its performance
-	 * is not critical, the flush is emulated with a persist.
-	 */
-	ret = rpmem_fip_persist_saw(fip, offset, len, lane, flags);
+	if (mode == RPMEM_PERSIST_SEND) {
+		len = min(len, fip->buff_size);
+		ret = rpmem_fip_persist_send(fip, offset, len, lane, flags);
+	} else {
+		/*
+		 * Probably splitting Send-after-Write into two stages (flush + drain)
+		 * will give some performance gains also for GPSPM mode.
+		 * Since for now GPSPM mode is considered auxiliary and its performance
+		 * is not critical, the flush is emulated with a persist.
+		 */
+		ret = rpmem_fip_persist_saw(fip, offset, len, lane, flags);
+	}
+
 	if (ret)
 		return -abs(ret);
 
