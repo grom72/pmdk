@@ -131,13 +131,23 @@ main(int argc, char *argv[])
 fprintf(stderr, "before flush\r\n");
 	{
 		int ii;
-//		for(ii = 1024*35; ii < DATA_SIZE; ii = ii+1024)
+		for(ii = 1024*1; ii <= DATA_SIZE; 
+		ii = (ii+1024*1000)<DATA_SIZE? (ii+1024*1000):
+				 (ii+1024*100)<DATA_SIZE? (ii+1024*100):
+						 (ii+1024*10)<DATA_SIZE? (ii+1024*10):
+								 (ii+1024*1)<DATA_SIZE? (ii+1024*1):
+										 (ii+1024/2)<DATA_SIZE? (ii+1024/2):
+												 (ii+1024/4)<DATA_SIZE? (ii+1024/4):
+														 (ii+1024/8)<DATA_SIZE? (ii+1024/8):
+																 (ii+1024/16)<DATA_SIZE? (ii+1024/16):
+				ii+1)
+
 //		for(ii = 1024*34; ii < DATA_SIZE; ii = ii+1)
-		for(ii = 35415; ii < DATA_SIZE; ii = ii+1)
+//		for(ii = 35415; ii < DATA_SIZE; ii = ii+1)
 		{
 //			ret = rpmem_flush(rpp, DATA_OFF, ii, 0,RPMEM_FLUSH_RELAXED);
 			ret = rpmem_flush(rpp, DATA_OFF, ii, 0,0);
-fprintf(stderr, "after flush %d %d\r\n", ii/1024, ii);
+fprintf(stderr, "after flush %d %d %d\r\n", ii/1024, ii, DATA_SIZE);
 			if (ret) {
                         fprintf(stderr, "rpmem_flush: %s\n", rpmem_errormsg());
                         return 1;
