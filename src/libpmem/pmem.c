@@ -303,8 +303,10 @@ pmem_msync(const void *addr, size_t len)
 	VALGRIND_DO_DISABLE_ERROR_REPORTING;
 
 	int ret;
-	if ((ret = msync((void *)uptr, len, MS_SYNC)) < 0)
+	if ((ret = msync((void *)uptr, len, MS_SYNC)) < 0) {
 		ERR("!msync");
+		LOG(15, "addr %p len %zu", addr, len);
+	}
 
 	VALGRIND_DO_ENABLE_ERROR_REPORTING;
 

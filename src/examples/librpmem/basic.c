@@ -58,7 +58,7 @@ default_attr(struct rpmem_pool_attr *attr)
 {
 	memset(attr, 0, sizeof(*attr));
 	attr->major = 1;
-	strncpy(attr->signature, "EXAMPLE", RPMEM_POOL_HDR_SIG_LEN);
+	strncpy(attr->signature, "BASIC", RPMEM_POOL_HDR_SIG_LEN);
 	memset(attr->poolset_uuid, SET_POOLSET_UUID, RPMEM_POOL_HDR_UUID_LEN);
 	memset(attr->uuid, SET_UUID, RPMEM_POOL_HDR_UUID_LEN);
 	memset(attr->next_uuid, SET_NEXT, RPMEM_POOL_HDR_UUID_LEN);
