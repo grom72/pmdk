@@ -1,0 +1,56 @@
+
+The maximum replicated memory region size can not be bigger than the maximum
+locked-in-memory address space limit. See **memlock** in **limits.conf**(5)
+for more details.
+
+# CAVEATS #
+
+**librpmem** registers a pool as a single memory region. A Chelsio T4 and T5
+hardware can not handle a memory region greater than or equal to 8GB due to
+a hardware bug. So *pool_size* value for **rpmem_create**(3) and **rpmem_open**(3)
+using this hardware can not be greater than or equal to 8GB.
+
+
+# TARGET NODE ADDRESS FORMAT #
+
+```
+[<user>@]<hostname>[:<port>]
+```
+
+The target node address is described by the *hostname* which the client
+connects to, with an optional *user* name. The user must be authorized
+to authenticate to the remote machine without querying for password/passphrase.
+The optional *port* number is used to establish the SSH connection. The default
+port number is 22.
+
+
++ **RPMA_ENABLE_SOCKETS**=0\|1
+
+Setting this variable to 1 enables using **fi_sockets**(7) provider for
+in-band RDMA connection. The *sockets* provider does not support IPv6.
+It is required to disable IPv6 system wide if **RPMA_ENABLE_SOCKETS** == 1 and
+*target* == localhost (or any other loopback interface address) and
+**SSH_CONNECTION** variable (see **ssh**(1) for more details) contains IPv6
+address after ssh to loopback interface. By default the *sockets* provider is
+disabled.
+
+* **RPMEM_ENABLE_VERBS**=0\|1
+
+Setting this variable to 0 disables using **fi_verbs**(7) provider for
+in-band RDMA connection. The *verbs* provider is enabled by default.
+
+* **RPMEM_MAX_NLANES**=*num*
+
+Limit the maximum number of lanes to *num*. See **LANES**, in **rpmem_create**(3), for details.
+
+* **RPMEM_WORK_QUEUE_SIZE**=*size*
+
+Suggest the work queue size. The effective work queue size can be greater than
+suggested if **librpmem** requires it or it can be smaller if underlying hardware
+does not support the suggested size. The work queue size affects the performance
+of communication to the remote node.
+**rpmem_flush**(3) operations can be added to the work queue up to the size of
+this queue. When work queue is full any subsequent call has to wait till the work
+queue will be drained. **rpmem_drain**(3) and **rpmem_persist**(3) among other
+things also drain the work queue.
+

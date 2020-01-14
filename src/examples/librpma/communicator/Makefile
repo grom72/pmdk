@@ -1,5 +1,5 @@
 #
-# Copyright 2014-2019, Intel Corporation
+# Copyright 2019, Intel Corporation
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -31,16 +31,13 @@
 #
 
 #
-# examples/Makefile -- build the Persistent Memory Development Kit examples
+# examples/librpmem/communicator/Makefile -- build the communicator example
 #
+PROGS = server client
 
-include ../common.inc
+LIBS = -lrpma -lpmem -pthread
 
-DIRS = libpmem libpmemblk libpmemlog libpmemobj librpmem librpma libpmempool pmreorder libpmem2
+include ../../Makefile.inc
 
-include Makefile.inc
-
-rmtmp:
-	$(RM) $(TMP_HEADERS)
-
-clobber clean: rmtmp
+server: server.o workers.o protocol.o pstructs.o
+client: client.o workers.o protocol.o pstructs.o

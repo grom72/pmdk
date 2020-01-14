@@ -1,5 +1,4 @@
-#
-# Copyright 2014-2019, Intel Corporation
+# Copyright 2019, Intel Corporation
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -28,19 +27,38 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
 
 #
-# examples/Makefile -- build the Persistent Memory Development Kit examples
+# src/librpma/Makefile -- Makefile for librpma
 #
 
 include ../common.inc
 
-DIRS = libpmem libpmemblk libpmemlog libpmemobj librpmem librpma libpmempool pmreorder libpmem2
+LIBRARY_NAME = rpma
+LIBRARY_SO_VERSION = 1
+LIBRARY_VERSION = 0.0
+SOURCE =\
+	$(COMMON)/alloc.c\
+	$(COMMON)/os_posix.c\
+	$(COMMON)/os_thread_posix.c\
+	$(COMMON)/out.c\
+	$(COMMON)/ravl.c\
+	$(COMMON)/util.c\
+	$(COMMON)/util_posix.c\
+	config.c\
+	connection.c\
+	dispatcher.c\
+	librpma.c\
+	memory.c\
+	msg.c\
+	rma.c\
+	rpma_utils.c\
+	rpma.c\
+	zone.c
 
-include Makefile.inc
+include ../Makefile.inc
 
-rmtmp:
-	$(RM) $(TMP_HEADERS)
-
-clobber clean: rmtmp
+CFLAGS += -I.
+CFLAGS += $(shell $(PKG_CONFIG) --cflags libfabric)
+LIBS += -pthread
+LIBS += $(shell $(PKG_CONFIG) --libs libfabric)

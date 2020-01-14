@@ -1,5 +1,5 @@
 #
-# Copyright 2014-2019, Intel Corporation
+# Copyright 2019, Intel Corporation
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -31,16 +31,20 @@
 #
 
 #
-# examples/Makefile -- build the Persistent Memory Development Kit examples
+# examples/librpma/Makefile -- build the librpma examples
 #
+TOP := ../../..
+include $(TOP)/src/common.inc
 
-include ../common.inc
+ifeq ($(BUILD_RPMEM), y)
+PROGS = hello
+DIRS = communicator
 
-DIRS = libpmem libpmemblk libpmemlog libpmemobj librpmem librpma libpmempool pmreorder libpmem2
+LIBS = -lrpma -lpmem -pthread
+else
+$(info NOTE: Skipping librpma examples because $(BUILD_RPMEM_INFO))
+endif
 
-include Makefile.inc
+include ../Makefile.inc
 
-rmtmp:
-	$(RM) $(TMP_HEADERS)
-
-clobber clean: rmtmp
+hello: hello.o

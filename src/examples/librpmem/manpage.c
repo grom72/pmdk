@@ -97,6 +97,12 @@ main(int argc, char *argv[])
 	memset(&pool_attr, 0, sizeof(pool_attr));
 	strncpy(pool_attr.signature, POOL_SIGNATURE, RPMEM_POOL_HDR_SIG_LEN);
 
+	/* remove old pool */
+	if (rpmem_remove(target, poolset, 0)) {
+		fprintf(stderr, "removing pool failed: %s\n", rpmem_errormsg());
+//		return 1;
+	}
+
 	/* create a remote pool */
 	RPMEMpool *rpp = rpmem_create(target, poolset, pool, POOL_SIZE,
 			&nlanes, &pool_attr);
@@ -109,12 +115,49 @@ main(int argc, char *argv[])
 	memset(pool, 0, POOL_SIZE);
 
 	/* make local data persistent on remote node */
+#if 0
 	ret = rpmem_persist(rpp, DATA_OFF, DATA_SIZE, 0, 0);
 	if (ret) {
 		fprintf(stderr, "rpmem_persist: %s\n", rpmem_errormsg());
 		return 1;
 	}
-
+	ret = rpmem_persist(rpp, DATA_OFF, DATA_SIZE, 0, 0);
+	if (ret) {
+		fprintf(stderr, "rpmem_persist: %s\n", rpmem_errormsg());
+		return 1;
+	}
+#endif
+#if 1
+fprintf(stderr, "before flush\r\n");
+	{
+		int ii;
+//		for(ii = 1024*35; ii < DATA_SIZE; ii = ii+1024)
+//		for(ii = 1024*34; ii < DATA_SIZE; ii = ii+1)
+		for(ii = 35415; ii < DATA_SIZE; ii = ii+1)
+		{
+//			ret = rpmem_flush(rpp, DATA_OFF, ii, 0,RPMEM_FLUSH_RELAXED);
+			ret = rpmem_flush(rpp, DATA_OFF, ii, 0,0);
+fprintf(stderr, "after flush %d %d\r\n", ii/1024, ii);
+			if (ret) {
+                        fprintf(stderr, "rpmem_flush: %s\n", rpmem_errormsg());
+                        return 1;
+			}
+			ret = rpmem_drain(rpp,0,0);
+			if (ret) {
+                        fprintf(stderr, "rpmem_drain: %s\n", rpmem_errormsg());
+                        return 1;
+			}
+		}
+	}
+#endif
+#if 0
+        /* deep flush on target. NOT WORKING AT ALL!*/
+      ret = rpmem_deep_persist(rpp, DATA_OFF, DATA_SIZE, 0);
+        if (ret) {
+                        fprintf(stderr, "rpmem_deep_persist: %s\n", rpmem_errormsg());
+                        //return 1;
+        }
+#endif
 	/* close the remote pool */
 	ret = rpmem_close(rpp);
 	if (ret) {

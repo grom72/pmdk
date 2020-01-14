@@ -1,5 +1,5 @@
 #
-# Copyright 2014-2019, Intel Corporation
+# Copyright 2019, Intel Corporation
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -31,16 +31,24 @@
 #
 
 #
-# examples/Makefile -- build the Persistent Memory Development Kit examples
+# src/test/fi_test/Makefile -- build fi_test
 #
 
-include ../common.inc
+include ../../common.inc
 
-DIRS = libpmem libpmemblk libpmemlog libpmemobj librpmem librpma libpmempool pmreorder libpmem2
+ifeq ($(BUILD_RPMEM), y)
+TARGET = fi_test
+OBJS = fi_test.o\
+	fi_mock.o
+#        rpmem_common.o
 
-include Makefile.inc
+# LIBRPMEM=y
+# LIBPMEMCOMMON=y
+endif
 
-rmtmp:
-	$(RM) $(TMP_HEADERS)
+include ../Makefile.inc
 
-clobber clean: rmtmp
+ifeq ($(BUILD_RPMEM), y)
+#LIBS += $(shell $(PKG_CONFIG) --libs libfabric)
+#CFLAGS += $(shell $(PKG_CONFIG) --cflags libfabric)
+endif

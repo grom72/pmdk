@@ -36,14 +36,15 @@ TOP := $(dir $(lastword $(MAKEFILE_LIST)))..
 include $(TOP)/src/common.inc
 
 TARGETS = libpmem libpmemblk libpmemlog libpmemobj libpmempool tools
-ALL_TARGETS = $(TARGETS) common librpmem libpmem2
+ALL_TARGETS = $(TARGETS) common librpmem libpmem2 librpma
 POSSIBLE_TARGETS = $(TARGETS) common librpmem rpmem_common test\
-	examples benchmarks libpmem2
+	examples benchmarks libpmem2 librpma
 
 SCOPE_DIRS = $(TARGETS) common librpmem rpmem_common
 
 DEBUG_RELEASE_TARGETS = common libpmem libpmemblk libpmemlog libpmemobj\
-	libpmempool librpmem libpmem2
+	libpmempool librpmem libpmem2\
+	librpma
 RELEASE_TARGETS = tools
 
 ifneq ($(BUILD_EXAMPLES),n)
@@ -65,14 +66,17 @@ SPARSE_TARGETS = $(POSSIBLE_TARGETS)
 HEADERS_DESTDIR = $(DESTDIR)$(includedir)
 HEADERS_INSTALL = include/libpmem.h\
 		include/libpmemobj.h include/libpmempool.h\
-		include/libpmemblk.h include/libpmemlog.h
+		include/libpmemblk.h include/libpmemlog.h\
+		include/libpmem2.h\
+		include/librpma.h
 
 OBJ_HEADERS_INSTALL = include/libpmemobj/*.h
 
 PKG_CONFIG_DESTDIR = $(DESTDIR)$(pkgconfigdir)
 PKG_CONFIG_COMMON = common.pc
 PKG_CONFIG_FILES = libpmem.pc libpmemobj.pc libpmemlog.pc libpmemblk.pc\
-		libpmempool.pc
+		libpmempool.pc libpmem2.pc\
+		librpma.pc
 PMREORDER_BIN = $(DESTDIR)$(bindir)
 PMREORDER_SRC = tools/pmreorder
 PMREORDER_FILES = $(PMREORDER_SRC)/*.py
