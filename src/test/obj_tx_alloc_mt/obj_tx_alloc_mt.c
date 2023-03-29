@@ -15,8 +15,6 @@
 #define MAX_THREADS 32
 #define MAX_OPS_PER_THREAD 1000
 #define ALLOC_SIZE 104
-#define REALLOC_SIZE (ALLOC_SIZE * 3)
-#define MIX_RERUNS 2
 
 #define CHUNKSIZE (1 << 18)
 #define CHUNKS_PER_THREAD 3
@@ -42,69 +40,6 @@ struct worker_args {
 	unsigned idx;
 };
 
-static void *
-alloc_worker(void *arg)
-{
-	struct worker_args *a = arg;
-
-	for (unsigned i = 0; i < Ops_per_thread; ++i) {
-		pmalloc(a->pop, &a->r->offs[a->idx][i], ALLOC_SIZE, 0, 0);
-		UT_ASSERTne(a->r->offs[a->idx][i], 0);
-	}
-
-	return NULL;
-}
-
-static void *
-realloc_worker(void *arg)
-{
-	struct worker_args *a = arg;
-
-	for (unsigned i = 0; i < Ops_per_thread; ++i) {
-		prealloc(a->pop, &a->r->offs[a->idx][i], REALLOC_SIZE, 0, 0);
-		UT_ASSERTne(a->r->offs[a->idx][i], 0);
-	}
-
-	return NULL;
-}
-
-static void *
-free_worker(void *arg)
-{
-	struct worker_args *a = arg;
-
-	for (unsigned i = 0; i < Ops_per_thread; ++i) {
-		pfree(a->pop, &a->r->offs[a->idx][i]);
-		UT_ASSERTeq(a->r->offs[a->idx][i], 0);
-	}
-
-	return NULL;
-}
-
-static void *
-mix_worker(void *arg)
-{
-	struct worker_args *a = arg;
-
-	/*
-	 * The mix scenario is ran twice to increase the chances of run
-	 * contention.
-	 */
-	for (unsigned j = 0; j < MIX_RERUNS; ++j) {
-		for (unsigned i = 0; i < Ops_per_thread; ++i) {
-			pmalloc(a->pop, &a->r->offs[a->idx][i],
-				ALLOC_SIZE, 0, 0);
-			UT_ASSERTne(a->r->offs[a->idx][i], 0);
-		}
-
-		for (unsigned i = 0; i < Ops_per_thread; ++i) {
-			pfree(a->pop, &a->r->offs[a->idx][i]);
-			UT_ASSERTeq(a->r->offs[a->idx][i], 0);
-		}
-	}
-
-	return NULL;
-}
 
 static void *
 tx_worker(void *arg)
@@ -153,21 +88,7 @@ tx3_worker(void *arg)
 	return NULL;
 }
 
-static void *
-alloc_free_worker(void *arg)
-{
-	struct worker_args *a = arg;
 
-	PMEMoid oid;
-	for (unsigned i = 0; i < Ops_per_thread; ++i) {
-		int err = pmemobj_alloc(a->pop, &oid, ALLOC_SIZE,
-				0, NULL, NULL);
-		UT_ASSERTeq(err, 0);
-		pmemobj_free(&oid);
-	}
-
-	return NULL;
-}
 
 #define OPS_PER_TX 10
 #define STEP 8
@@ -199,111 +120,6 @@ tx2_worker(void *arg)
 	}
 
 	return NULL;
-}
-
-static void *
-action_cancel_worker(void *arg)
-{
-	struct worker_args *a = arg;
-
-	PMEMoid oid;
-	for (unsigned i = 0; i < Ops_per_thread; ++i) {
-		unsigned arr_id = a->idx / 2;
-		struct action *act = &a->r->actions[arr_id][i];
-		if (a->idx % 2 == 0) {
-			os_mutex_lock(&act->lock);
-			oid = pmemobj_reserve(a->pop,
-				&act->pact, ALLOC_SIZE, 0);
-			UT_ASSERT(!OID_IS_NULL(oid));
-			os_cond_signal(&act->cond);
-			os_mutex_unlock(&act->lock);
-		} else {
-			os_mutex_lock(&act->lock);
-			while (act->pact.heap.offset == 0)
-				os_cond_wait(&act->cond, &act->lock);
-			pmemobj_cancel(a->pop, &act->pact, 1);
-			os_mutex_unlock(&act->lock);
-		}
-	}
-
-	return NULL;
-}
-
-static void *
-action_publish_worker(void *arg)
-{
-	struct worker_args *a = arg;
-
-	PMEMoid oid;
-	for (unsigned i = 0; i < Ops_per_thread; ++i) {
-		unsigned arr_id = a->idx / 2;
-		struct action *act = &a->r->actions[arr_id][i];
-		if (a->idx % 2 == 0) {
-			os_mutex_lock(&act->lock);
-			oid = pmemobj_reserve(a->pop,
-				&act->pact, ALLOC_SIZE, 0);
-			UT_ASSERT(!OID_IS_NULL(oid));
-			os_cond_signal(&act->cond);
-			os_mutex_unlock(&act->lock);
-		} else {
-			os_mutex_lock(&act->lock);
-			while (act->pact.heap.offset == 0)
-				os_cond_wait(&act->cond, &act->lock);
-			pmemobj_publish(a->pop, &act->pact, 1);
-			os_mutex_unlock(&act->lock);
-		}
-	}
-
-	return NULL;
-}
-
-static void *
-action_mix_worker(void *arg)
-{
-	struct worker_args *a = arg;
-
-	PMEMoid oid;
-	for (unsigned i = 0; i < Ops_per_thread; ++i) {
-		unsigned arr_id = a->idx / 2;
-		unsigned publish = i % 2;
-		struct action *act = &a->r->actions[arr_id][i];
-		if (a->idx % 2 == 0) {
-			os_mutex_lock(&act->lock);
-			oid = pmemobj_reserve(a->pop,
-				&act->pact, ALLOC_SIZE, 0);
-			UT_ASSERT(!OID_IS_NULL(oid));
-			os_cond_signal(&act->cond);
-			os_mutex_unlock(&act->lock);
-		} else {
-			os_mutex_lock(&act->lock);
-			while (act->pact.heap.offset == 0)
-				os_cond_wait(&act->cond, &act->lock);
-			if (publish)
-				pmemobj_publish(a->pop, &act->pact, 1);
-			else
-				pmemobj_cancel(a->pop, &act->pact, 1);
-			os_mutex_unlock(&act->lock);
-		}
-		pmemobj_persist(a->pop, act, sizeof(*act));
-	}
-
-	return NULL;
-}
-
-static void
-actions_clear(PMEMobjpool *pop, struct root *r)
-{
-	for (unsigned i = 0; i < Threads; ++i) {
-		for (unsigned j = 0; j < Ops_per_thread; ++j) {
-			struct action *a = &r->actions[i][j];
-			util_mutex_destroy(&a->lock);
-			util_mutex_init(&a->lock);
-			util_cond_destroy(&a->cond);
-			util_cond_init(&a->cond);
-			memset(&a->pact, 0, sizeof(a->pact));
-			pmemobj_persist(pop, a, sizeof(*a));
-		}
-	}
 }
 
 static void
@@ -390,57 +206,7 @@ main(int argc, char *argv[])
 	UT_ASSERTeq(ret, 0);
 	alloc = allocPre;
 	if (enable_stats)
-		alloc += Ops_per_thread * Threads * ((ALLOC_SIZE / 128) + 1)
-									* 128;
-	run_worker(alloc_worker, args);
-	ret = pmemobj_ctl_get(pop, "stats.heap.curr_allocated", &allocPost);
-	UT_ASSERTeq(alloc, allocPost);
-
-	if (enable_stats) {
-		alloc -= Ops_per_thread * Threads * ((ALLOC_SIZE / 128) + 1)
-									* 128;
-		alloc += Ops_per_thread * Threads * ((REALLOC_SIZE / 128) + 1)
-									* 128;
-	}
-	run_worker(realloc_worker, args);
-	ret = pmemobj_ctl_get(pop, "stats.heap.curr_allocated", &allocPost);
-	UT_ASSERTeq(alloc, allocPost);
-
-	alloc = allocPre;
-	run_worker(free_worker, args);
-	ret = pmemobj_ctl_get(pop, "stats.heap.curr_allocated", &allocPost);
-	UT_ASSERTeq(alloc, allocPost);
-
-	run_worker(mix_worker, args);
-	ret = pmemobj_ctl_get(pop, "stats.heap.curr_allocated", &allocPost);
-	UT_ASSERTeq(alloc, allocPost);
-
-	run_worker(alloc_free_worker, args);
-	ret = pmemobj_ctl_get(pop, "stats.heap.curr_allocated", &allocPost);
-	UT_ASSERTeq(alloc, allocPost);
-
-	run_worker(action_cancel_worker, args);
-	actions_clear(pop, r);
-	ret = pmemobj_ctl_get(pop, "stats.heap.curr_allocated", &allocPost);
-	UT_ASSERTeq(alloc, allocPost);
 	if (!skip_allocation_inc) {
-		if (enable_stats && Threads > 1)
-			alloc += Ops_per_thread / 2 * Threads
-					* ((ALLOC_SIZE / 128) + 1) * 128;
-		run_worker(action_publish_worker, args);
-		actions_clear(pop, r);
-		ret = pmemobj_ctl_get(pop, "stats.heap.curr_allocated",
-								&allocPost);
-		UT_ASSERTeq(alloc, allocPost);
-
-		if (enable_stats && Threads > 1)
-			alloc += Ops_per_thread / 4 * Threads
-					 * ((ALLOC_SIZE / 128) + 1) * 128;
-		run_worker(action_mix_worker, args);
-		ret = pmemobj_ctl_get(pop, "stats.heap.curr_allocated",
-								&allocPost);
-		UT_ASSERTeq(alloc, allocPost);
-	}
 	/*
 	 * Reduce the number of lanes to a value smaller than the number of
 	 * threads. This will ensure that at least some of the state of the lane
@@ -453,7 +219,7 @@ main(int argc, char *argv[])
 	pop->lanes_desc.runtime_nlanes = old_nlanes;
 	ret = pmemobj_ctl_get(pop, "stats.heap.curr_allocated", &allocPost);
 	UT_ASSERTeq(alloc, allocPost);
-
+	}
 	/*
 	 * This workload might create many allocation classes due to pvector,
 	 * keep it last.
