@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-/* Copyright 2015-2023, Intel Corporation */
+/* Copyright 2023, Intel Corporation */
 
 /*
  * obj_tx_alloc_mt.c -- multithreaded test of allocator
