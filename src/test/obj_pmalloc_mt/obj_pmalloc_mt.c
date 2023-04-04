@@ -405,6 +405,20 @@ main(int argc, char *argv[])
 	run_worker(tx3_worker, args);
 
 	pmemobj_close(pop);
+	pop = pmemobj_open(argv[4], "TEST");
+	oid = pmemobj_root(pop, sizeof(struct root));
+	r = pmemobj_direct(oid);
+	UT_ASSERTne(r, NULL);
+	for (unsigned i = 0; i < Threads; ++i) {
+		args[i].pop = pop;
+		args[i].r = r;
+		args[i].idx = i;
+	}
+	run_worker(alloc_worker, args);
+	run_worker(realloc_worker, args);
+	run_worker(free_worker, args);
+
+	pmemobj_close(pop);
 
 	DONE(NULL);
 }

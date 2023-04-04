@@ -14,16 +14,17 @@ require_test_type short
 
 setup
 
-TEST_FILE_PATH=$DIR/testfile
+TEST_FILE_PATH=$DIR/testfile8
+#TEST_FILE_PATH=/mnt/pmem/obj_pmalloc_mt
 
 rm -f $TEST_FILE_PATH
 
 PMEM_IS_PMEM_FORCE=1 expect_normal_exit\
 	./obj_pmalloc_mt$EXESUFFIX 32 1000 100 $TEST_FILE_PATH
 
-rm $TEST_FILE_PATH
+#rm $TEST_FILE_PATH
 
-PMEM_IS_PMEM_FORCE=1 expect_normal_exit\
-	./obj_pmalloc_mt$EXESUFFIX 32 1000 100 $TEST_FILE_PATH
+#PMEM_IS_PMEM_FORCE=1 expect_normal_exit\
+#	./obj_pmalloc_mt$EXESUFFIX 32 1000 100 $TEST_FILE_PATH
 
 pass
