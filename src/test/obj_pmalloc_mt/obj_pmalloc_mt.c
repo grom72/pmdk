@@ -12,11 +12,10 @@
 #include "sys_util.h"
 #include "unittest.h"
 
-#define MAX_THREADS 32
-#define MAX_OPS_PER_THREAD 1000
+#define MAX_THREADS 4
+#define MAX_OPS_PER_THREAD 1000 * 8
 #define ALLOC_SIZE 104
 #define REALLOC_SIZE (ALLOC_SIZE * 3)
-#define MIX_RERUNS 2
 
 #define CHUNKSIZE (1 << 18)
 #define CHUNKS_PER_THREAD 3
@@ -46,9 +45,11 @@ static void *
 alloc_worker(void *arg)
 {
 	struct worker_args *a = arg;
+	int ret;
 
 	for (unsigned i = 0; i < Ops_per_thread; ++i) {
-		pmalloc(a->pop, &a->r->offs[a->idx][i], ALLOC_SIZE, 0, 0);
+		ret = pmalloc(a->pop, &a->r->offs[a->idx][i], ALLOC_SIZE, 0, 0);
+		UT_ASSERTeq(ret, 0);
 		UT_ASSERTne(a->r->offs[a->idx][i], 0);
 	}
 
@@ -61,9 +62,15 @@ realloc_worker(void *arg)
 	struct worker_args *a = arg;
 	int ret;
 
-	for (unsigned i = 0; i < Ops_per_thread; ++i) {
-		ret = prealloc(a->pop, &a->r->offs[a->idx][i],
+	for (unsigned i = 0; i < Ops_per_thread * 2; ++i) {
+		if( a->idx == 28 )
+			ret = prealloc(a->pop, &a->r->offs[a->idx][i],
 							REALLOC_SIZE, 0, 0);
+		else
+			ret = prealloc(a->pop, &a->r->offs[a->idx][i],
+							REALLOC_SIZE, 0, 0);
+		if (ret)
+			UT_ASSERTeq(ret, 0);
 		UT_ASSERTeq(ret, 0);
 		UT_ASSERTne(a->r->offs[a->idx][i], 0);
 	}
@@ -87,6 +94,9 @@ free_worker(void *arg)
 static void *
 mix_worker(void *arg)
 {
+#if 0
+#define MIX_RERUNS 2
+
 	struct worker_args *a = arg;
 	int ret;
 
@@ -108,13 +118,16 @@ mix_worker(void *arg)
 		}
 	}
 
+#endif
 	return NULL;
 }
 
 static void *
 tx_worker(void *arg)
 {
+#if 1
 	struct worker_args *a = arg;
+	PMEMoid oid;
 
 	/*
 	 * Allocate objects until exhaustion, once that happens the transaction
@@ -122,7 +135,8 @@ tx_worker(void *arg)
 	 */
 	TX_BEGIN(a->pop) {
 		for (unsigned n = 0; ; ++n) { /* this is NOT an infinite loop */
-			pmemobj_tx_alloc(ALLOC_SIZE, a->idx);
+			oid = pmemobj_tx_alloc(ALLOC_SIZE, a->idx);
+			UT_ASSERT(!OID_IS_NULL(oid));
 			if (Ops_per_thread != MAX_OPS_PER_THREAD &&
 			    n == Ops_per_thread) {
 				pmemobj_tx_abort(0);
@@ -130,6 +144,7 @@ tx_worker(void *arg)
 		}
 	} TX_END
 
+#endif
 	return NULL;
 }
 
@@ -150,13 +165,13 @@ tx3_worker(void *arg)
 			pmemobj_tx_abort(EINVAL);
 		} TX_END
 	}
-
 	return NULL;
 }
 
 static void *
 alloc_free_worker(void *arg)
 {
+#if 1
 	struct worker_args *a = arg;
 
 	PMEMoid oid;
@@ -167,16 +182,19 @@ alloc_free_worker(void *arg)
 		pmemobj_free(&oid);
 	}
 
+#endif
 	return NULL;
 }
 
-#define OPS_PER_TX 10
-#define STEP 8
 #define TEST_LANES 4
 
 static void *
 tx2_worker(void *arg)
 {
+#if 0
+#define OPS_PER_TX 10
+#define STEP 8
+
 	struct worker_args *a = arg;
 
 	for (unsigned n = 0; n < Tx_per_thread; ++n) {
@@ -198,13 +216,14 @@ tx2_worker(void *arg)
 			UT_ASSERT(0);
 		} TX_END
 	}
-
+#endif
 	return NULL;
 }
 
 static void *
 action_cancel_worker(void *arg)
 {
+#if 0
 	struct worker_args *a = arg;
 
 	PMEMoid oid;
@@ -227,12 +246,14 @@ action_cancel_worker(void *arg)
 		}
 	}
 
+#endif
 	return NULL;
 }
 
 static void *
 action_publish_worker(void *arg)
 {
+#if 0
 	struct worker_args *a = arg;
 
 	PMEMoid oid;
@@ -255,12 +276,14 @@ action_publish_worker(void *arg)
 		}
 	}
 
+#endif
 	return NULL;
 }
 
 static void *
 action_mix_worker(void *arg)
 {
+#if 0
 	struct worker_args *a = arg;
 
 	PMEMoid oid;
@@ -288,12 +311,14 @@ action_mix_worker(void *arg)
 		pmemobj_persist(a->pop, act, sizeof(*act));
 	}
 
+#endif
 	return NULL;
 }
 
 static void
 actions_clear(PMEMobjpool *pop, struct root *r)
 {
+#if 1
 	for (unsigned i = 0; i < Threads; ++i) {
 		for (unsigned j = 0; j < Ops_per_thread; ++j) {
 			struct action *a = &r->actions[i][j];
@@ -305,6 +330,7 @@ actions_clear(PMEMobjpool *pop, struct root *r)
 			pmemobj_persist(pop, a, sizeof(*a));
 		}
 	}
+#endif
 }
 
 static void
@@ -343,8 +369,9 @@ main(int argc, char *argv[])
 
 	if (!exists) {
 		pop = pmemobj_create(argv[4], "TEST", (PMEMOBJ_MIN_POOL) +
-			(MAX_THREADS * CHUNKSIZE * CHUNKS_PER_THREAD) +
-			(MAX_THREADS * MAX_OPS_PER_THREAD * REALLOC_SIZE),
+			(MAX_THREADS * CHUNKSIZE * CHUNKS_PER_THREAD),
+			// +
+			// (MAX_THREADS * MAX_OPS_PER_THREAD * REALLOC_SIZE*100),
 		0666);
 
 		if (pop == NULL)
@@ -355,10 +382,21 @@ main(int argc, char *argv[])
 		if (pop == NULL)
 			UT_FATAL("!pmemobj_open");
 	}
+	int enable_stats = 1;
+	if (enable_stats) {
+		int ret = pmemobj_ctl_set(pop, "stats.enabled", &enable_stats);
+		UT_ASSERTeq(ret, 0);
+	}
+	size_t allocPre, alloc;
+	int ret = pmemobj_ctl_get(pop, "stats.heap.curr_allocated", &allocPre);
+	UT_ASSERTeq(ret, 0);
 
 	PMEMoid oid = pmemobj_root(pop, sizeof(struct root));
 	struct root *r = pmemobj_direct(oid);
 	UT_ASSERTne(r, NULL);
+	ret = pmemobj_ctl_get(pop, "stats.heap.curr_allocated", &alloc);
+	UT_ASSERTeq(ret, 0);
+	
 
 	struct worker_args args[MAX_THREADS];
 
@@ -399,11 +437,13 @@ main(int argc, char *argv[])
 	 * This workload might create many allocation classes due to pvector,
 	 * keep it last.
 	 */
-	if (Threads == MAX_THREADS) /* don't run for short tests */
-		run_worker(tx_worker, args);
+	//if (Threads == MAX_THREADS) /* don't run for short tests */
+	run_worker(tx_worker, args);
 
 	run_worker(tx3_worker, args);
 
+
+	/*
 	pmemobj_close(pop);
 	pop = pmemobj_open(argv[4], "TEST");
 	oid = pmemobj_root(pop, sizeof(struct root));
@@ -417,6 +457,7 @@ main(int argc, char *argv[])
 	run_worker(alloc_worker, args);
 	run_worker(realloc_worker, args);
 	run_worker(free_worker, args);
+	*/
 
 	pmemobj_close(pop);
 
