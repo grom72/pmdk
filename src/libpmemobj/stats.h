@@ -51,15 +51,23 @@ struct stats {
 } while (0)
 
 #define STATS_SUB_transient(stats, name, value) do {\
+	uint64_t oldValue;\
 	if ((stats)->enabled == POBJ_STATS_ENABLED_TRANSIENT ||\
-	(stats)->enabled == POBJ_STATS_ENABLED_BOTH)\
+	(stats)->enabled == POBJ_STATS_ENABLED_BOTH) {\
+		oldValue = \
 		util_fetch_and_sub64((&(stats)->transient->name), (value));\
+		ASSERT((stats)->transient->name < oldValue);\
+	}\
 } while (0)
 
 #define STATS_SUB_persistent(stats, name, value) do {\
+	uint64_t oldValue;\
 	if ((stats)->enabled == POBJ_STATS_ENABLED_PERSISTENT ||\
-	(stats)->enabled == POBJ_STATS_ENABLED_BOTH)\
+	(stats)->enabled == POBJ_STATS_ENABLED_BOTH) {\
+		oldValue = \
 		util_fetch_and_sub64((&(stats)->persistent->name), (value));\
+		ASSERT((stats)->persistent->name < oldValue);\
+	}\
 } while (0)
 
 #define STATS_SET(stats, type, name, value) do {\
