@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-/* Copyright 2016-2021, Intel Corporation */
+/* Copyright 2016-2023, Intel Corporation */
 
 /*
  * ctl.c -- implementation of the interface for examination and modification of
@@ -8,6 +8,8 @@
 #include "ctl.h"
 #include "os.h"
 #include "alloc.h"
+
+#define CTL_LOG_LEVEL 4
 
 #define CTL_MAX_ENTRIES 100
 
@@ -47,7 +49,7 @@ static const struct ctl_node *
 ctl_find_node(const struct ctl_node *nodes, const char *name,
 	struct ctl_indexes *indexes)
 {
-	LOG(3, "nodes %p name %s indexes %p", nodes, name, indexes);
+	LOG(CTL_LOG_LEVEL, "nodes %p name %s indexes %p", nodes, name, indexes);
 
 	const struct ctl_node *n = NULL;
 	char *sptr = NULL;
@@ -271,7 +273,7 @@ int
 ctl_query(struct ctl *ctl, void *ctx, enum ctl_query_source source,
 	const char *name, enum ctl_query_type type, void *arg)
 {
-	LOG(3, "ctl %p ctx %p source %d name %s type %d arg %p",
+	LOG(CTL_LOG_LEVEL, "ctl %p ctx %p source %d name %s type %d arg %p",
 			ctl, ctx, source, name, type, arg);
 
 	if (name == NULL) {
@@ -393,7 +395,8 @@ ctl_load_config(struct ctl *ctl, void *ctx, char *buf)
 int
 ctl_load_config_from_string(struct ctl *ctl, void *ctx, const char *cfg_string)
 {
-	LOG(3, "ctl %p ctx %p cfg_string \"%s\"", ctl, ctx, cfg_string);
+	LOG(CTL_LOG_LEVEL, "ctl %p ctx %p cfg_string \"%s\"", ctl, ctx, \
+		cfg_string);
 
 	char *buf = Strdup(cfg_string);
 	if (buf == NULL) {
@@ -416,7 +419,7 @@ ctl_load_config_from_string(struct ctl *ctl, void *ctx, const char *cfg_string)
 int
 ctl_load_config_from_file(struct ctl *ctl, void *ctx, const char *cfg_file)
 {
-	LOG(3, "ctl %p ctx %p cfg_file \"%s\"", ctl, ctx, cfg_file);
+	LOG(CTL_LOG_LEVEL, "ctl %p ctx %p cfg_file \"%s\"", ctl, ctx, cfg_file);
 
 	int ret = -1;
 
