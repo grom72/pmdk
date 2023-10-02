@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-/* Copyright 2020-2022, Intel Corporation */
+/* Copyright 2020-2023, Intel Corporation */
 
 /*
  * region_namespace_ndctl.c -- common ndctl functions
@@ -232,6 +232,7 @@ pmem2_get_region_id(const struct pmem2_source *src, unsigned *region_id)
 	struct ndctl_namespace *ndns;
 	struct ndctl_ctx *ctx;
 
+	LOG(3, "ndctl_new()");
 	errno = ndctl_new(&ctx) * (-1);
 	if (errno) {
 		ERR("!ndctl_new");
