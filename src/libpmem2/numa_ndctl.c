@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-/* Copyright 2020, Intel Corporation */
+/* Copyright 2020-2023, Intel Corporation */
 
 #include <errno.h>
 #include <ndctl/libndctl.h>
@@ -31,6 +31,7 @@ pmem2_source_numa_node(const struct pmem2_source *src, int *numa_node)
 
 	ASSERTeq(src->type, PMEM2_SOURCE_FD);
 
+	LOG(3, "ndctl_new()");
 	errno = ndctl_new(&ctx) * (-1);
 	if (errno) {
 		ERR("!ndctl_new");

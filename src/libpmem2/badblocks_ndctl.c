@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-/* Copyright 2017-2022, Intel Corporation */
+/* Copyright 2017-2023, Intel Corporation */
 
 /*
  * badblocks_ndctl.c -- implementation of DIMMs API based on the ndctl library
@@ -270,6 +270,7 @@ pmem2_badblock_context_new(struct pmem2_badblock_context **bbctx,
 	int ret = PMEM2_E_UNKNOWN;
 	*bbctx = NULL;
 
+	LOG(3, "ndctl_new()");
 	errno = ndctl_new(&ctx) * (-1);
 	if (errno) {
 		ERR("!ndctl_new");
