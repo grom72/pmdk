@@ -95,6 +95,8 @@ CFLAGS += -fno-lto
 ifeq ($(OS_DIMM),ndctl)
 CFLAGS += -DSDS_ENABLED
 CFLAGS += $(OS_DIMM_CFLAG)
+else
+CFLAGS += $(OS_DIMM_CFLAG)
 endif
 
 ifeq ($(COVERAGE),1)
