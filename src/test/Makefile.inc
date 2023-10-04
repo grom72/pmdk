@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2014-2022, Intel Corporation
+# Copyright 2014-2023, Intel Corporation
 #
 
 #
@@ -584,6 +584,8 @@ LDFLAGS = -Wl,--warn-common -Wl,--fatal-warnings $(EXTRA_LDFLAGS)
 ifeq ($(OS_DIMM),ndctl)
 CFLAGS += $(OS_DIMM_CFLAG)
 CFLAGS += -DSDS_ENABLED
+else
+CFLAGS += $(OS_DIMM_CFLAG)
 endif
 
 ifeq ($(COVERAGE),1)

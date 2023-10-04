@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2014-2022, Intel Corporation
+# Copyright 2014-2023, Intel Corporation
 #
 # src/Makefile.inc -- common Makefile rules for PMDK
 #
@@ -98,6 +98,8 @@ CFLAGS += -fno-lto
 
 ifeq ($(OS_DIMM),ndctl)
 CFLAGS += -DSDS_ENABLED
+CFLAGS += $(OS_DIMM_CFLAG)
+else
 CFLAGS += $(OS_DIMM_CFLAG)
 endif
 

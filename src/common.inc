@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2014-2022, Intel Corporation
+# Copyright 2014-2023, Intel Corporation
 #
 # src/common.inc -- common Makefile rules for PMDK
 #
@@ -391,6 +391,7 @@ ifeq ($(NDCTL_ENABLE),y)
     OS_DIMM := ndctl
 else
     OS_DIMM := none
+    OS_DIMM_CFLAG=-DNDCTL_ENABLED=0
 endif
 export OS_DIMM
 export LIBNDCTL_PKG_CONFIG_DEPS
