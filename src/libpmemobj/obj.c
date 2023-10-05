@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-/* Copyright 2014-2021, Intel Corporation */
+/* Copyright 2014-2023, Intel Corporation */
 
 /*
  * obj.c -- transactional object store implementation
@@ -3312,7 +3312,7 @@ static inline
 int
 pmemobj_ctl_getU(PMEMobjpool *pop, const char *name, void *arg)
 {
-	LOG(3, "pop %p name %s arg %p", pop, name, arg);
+	LOG(150, "pop %p name %s arg %p", pop, name, arg);
 	return ctl_query(pop == NULL ? NULL : pop->ctl, pop,
 			CTL_QUERY_PROGRAMMATIC, name, CTL_QUERY_READ, arg);
 }
