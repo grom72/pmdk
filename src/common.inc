@@ -391,7 +391,6 @@ ifeq ($(NDCTL_ENABLE),y)
     OS_DIMM := ndctl
 else
     OS_DIMM := none
-    OS_DIMM_CFLAG=-DNDCTL_ENABLED=0
 endif
 export OS_DIMM
 export LIBNDCTL_PKG_CONFIG_DEPS
