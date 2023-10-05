@@ -9,7 +9,7 @@
 #include "os.h"
 #include "alloc.h"
 
-#define CTL_LOG_LEVEL 4
+#define CTL_LOG_LEVEL 100
 
 #define CTL_MAX_ENTRIES 100
 
