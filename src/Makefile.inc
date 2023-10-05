@@ -77,13 +77,20 @@ ifeq ($(DEBUG),1)
 # user-defined CFLAGS as it conflicts with -O0.
 DEBUG_CFLAGS += -Wp,-U_FORTIFY_SOURCE
 DEBUG_CFLAGS += -O0 -ggdb -DDEBUG
+ifeq ($(DEBUG_INSTALL),y)
 LIB_SUBDIR =
-#LIB_SUBDIR = /pmdk_debug
+else
+LIB_SUBDIR = /pmdk_debug
+endif
 OBJDIR = debug
 else
 DEFAULT_CFLAGS += -O2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2
+ifeq ($(DEBUG_INSTALL),y)
 LIB_SUBDIR = /pmdk_release
-#LIB_SUBDIR =
+else
+LIB_SUBDIR =
+endif
+
 OBJDIR = nondebug
 endif
 

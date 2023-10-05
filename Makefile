@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2014-2021, Intel Corporation
+# Copyright 2014-2023, Intel Corporation
 
 #
 # Makefile -- top-level Makefile for PMDK
@@ -49,6 +49,7 @@ BUILD_RPMEM ?= y
 TEST_CONFIG_FILE ?= "$(CURDIR)"/src/test/testconfig.sh
 PMEMSET_INSTALL ?= n
 DOC ?= y
+DEBUG_INSTALL ?= n
 
 rpm : override DESTDIR="$(CURDIR)/$(RPM_BUILDDIR)"
 dpkg: override DESTDIR="$(CURDIR)/$(DPKG_BUILDDIR)"
