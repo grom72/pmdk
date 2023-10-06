@@ -14,6 +14,7 @@
 #include <limits.h>
 #include <string.h>
 #include <errno.h>
+#include <stdint.h>
 
 #include "out.h"
 #include "os.h"
@@ -327,6 +328,14 @@ out_snprintf(char *str, size_t size, const char *format, ...)
 	return (ret);
 }
 
+static uint64_t
+getsp(void)
+{
+	uint64_t sp;
+	asm("mov %%rsp, %0" : "=rm" (sp));
+	return sp;
+}
+
 /*
  * out_common -- common output code, all output goes through here
  */
@@ -343,12 +352,16 @@ out_common(const char *file, int line, const char *func, int level,
 
 	unsigned long olast_error = 0;
 
+	char sp_txt[128];
+	uint64_t sp = getsp();
+	out_snprintf(sp_txt, 64, "SP: 0x%12lX", sp);
+
 	if (file) {
 		char *f = strrchr(file, OS_DIR_SEPARATOR);
 		if (f)
 			file = f + 1;
 		ret = out_snprintf(&buf[cc], MAXPRINT - cc,
-				"<%s>: <%d> [%s:%d %s] ",
+				"%s <%s>: <%d> [%s:%d %s] ", sp_txt,
 				Log_prefix, level, file, line, func);
 		if (ret < 0) {
 			Print("out_snprintf failed");

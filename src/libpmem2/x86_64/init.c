@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-/* Copyright 2014-2022, Intel Corporation */
+/* Copyright 2014-2023, Intel Corporation */
 
 #include <string.h>
 #include <xmmintrin.h>
@@ -69,6 +69,7 @@ pmem_memmove_nodrain(void *dest, const void *src, size_t len, unsigned flags,
 {
 	/* suppress unused-parameter errors */
 	SUPPRESS_UNUSED(flushf);
+	LOG(15, "dest %p src %p len %zu", dest, src, len);
 
 	if (len == 0 || src == dest)
 		return dest;
