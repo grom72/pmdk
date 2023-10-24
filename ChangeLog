@@ -6,6 +6,8 @@
 	- Use Malloc for big local data structure to avoid huge stack usage
 	
 	- Make memset_* function non-inline to prevent huge stack consumption.
+=======
+	- Make memmove_mov_* function non-inline to prevent huge stack consumption.
 
 Tue Aug 8 2023 Oksana Sałyk <oksana.salyk@intel.com>
 
