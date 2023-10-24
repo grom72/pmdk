@@ -2,11 +2,8 @@
 
 	This release:
 	- Significantly reduces the libpmem's stack usage.
-<<<<<<< HEAD
 	- Decrease stack usage by allocating paths' buffers on heap
-=======
 	- Use Malloc for big local data structure to avoid huge stack usage
->>>>>>> limited-pool_hdr
 	
 
 Tue Aug 8 2023 Oksana Sałyk <oksana.salyk@intel.com>

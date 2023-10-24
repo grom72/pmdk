@@ -162,17 +162,11 @@
 5936 memset_mov_avx_clflushopt : src/debug/libpmem2/memset_t_avx.su:memset_t_avx.c dynamic,bounded
 4384 pool_params_parse : src/debug/libpmempool/pool.su:pool.c dynamic,bounded
 4288 pool_set_map : src/debug/libpmempool/pool.su:pool.c dynamic,bounded
-<<<<<<< HEAD
-4208 util_header_check : src/debug/libpmempool/set.su:set.c dynamic,bounded
-4208 util_header_check : src/debug/libpmemobj/set.su:set.c dynamic,bounded
-4208 util_header_check : src/debug/common/set.su:set.c dynamic,bounded
-=======
 4288 ndctl_match_devdax : src/debug/libpmem/region_namespace_ndctl.su:region_namespace_ndctl.c dynamic,bounded
 4288 ndctl_match_devdax : src/debug/libpmempool/region_namespace_ndctl.su:region_namespace_ndctl.c dynamic,bounded
 4288 ndctl_match_devdax : src/debug/libpmemobj/region_namespace_ndctl.su:region_namespace_ndctl.c dynamic,bounded
 4288 ndctl_match_devdax : src/debug/libpmem2/region_namespace_ndctl.su:region_namespace_ndctl.c dynamic,bounded
 4288 ndctl_match_devdax : src/debug/common/region_namespace_ndctl.su:region_namespace_ndctl.c dynamic,bounded
->>>>>>> limited-pool_hdr
 4176 features_check : src/debug/libpmempool/feature.su:feature.c static
 4160 pool_hdr_default_fix : src/debug/libpmempool/check_pool_hdr.su:check_pool_hdr.c dynamic,bounded
 4160 check_pool_hdr_uuids : src/debug/libpmempool/check_pool_hdr.su:check_pool_hdr.c static

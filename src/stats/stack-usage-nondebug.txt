@@ -8,11 +8,6 @@
 7424 memmove_mov_avx512f_empty : src/nondebug/libpmem/memcpy_t_avx512f.su:memcpy_t_avx512f.c static
 7424 memmove_mov_avx512f_empty : src/nondebug/libpmem2/memcpy_t_avx512f.su:memcpy_t_avx512f.c static
 4352 pool_params_parse.isra.2.constprop : src/nondebug/libpmempool/pool.su:pool.c dynamic,bounded
-<<<<<<< HEAD
-4176 util_header_check : src/nondebug/libpmempool/set.su:set.c static
-4176 util_header_check : src/nondebug/libpmemobj/set.su:set.c static
-4176 util_header_check : src/nondebug/common/set.su:set.c static
-=======
 4272 ndctl_match_fsdax : src/nondebug/libpmem/region_namespace_ndctl.su:region_namespace_ndctl.c static
 4272 ndctl_match_fsdax : src/nondebug/libpmempool/region_namespace_ndctl.su:region_namespace_ndctl.c static
 4272 ndctl_match_fsdax : src/nondebug/libpmemobj/region_namespace_ndctl.su:region_namespace_ndctl.c static
@@ -28,7 +23,6 @@
 4224 check_domain_in_region : src/nondebug/libpmem/auto_flush_linux.su:auto_flush_linux.c dynamic,bounded
 4224 check_domain_in_region : src/nondebug/libpmem2/auto_flush_linux.su:auto_flush_linux.c dynamic,bounded
 4224 check_domain_in_region : src/nondebug/common/auto_flush_linux.su:auto_flush_linux.c dynamic,bounded
->>>>>>> limited-pool_hdr
 4176 features_check : src/nondebug/libpmempool/feature.su:feature.c static
 4176 check_pool_hdr_uuids : src/nondebug/libpmempool/check_pool_hdr.su:check_pool_hdr.c static
 4176 check_pool_hdr : src/nondebug/libpmempool/check_pool_hdr.su:check_pool_hdr.c static
