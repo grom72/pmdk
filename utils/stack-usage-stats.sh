@@ -11,6 +11,7 @@ fi
 
 for build in debug nondebug; do
 	grep -v ^$ src/$build/*/*.su | \
+	grep -v libpmempool | \
 	gawk -F "[:\t]" '{print $6 " " $5 " : " $1 ":" $2 " " $7}' | \
 	sort -n -r > src/stats/stack-usage-$build.txt
 done
