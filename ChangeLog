@@ -2,6 +2,7 @@
 
 	This release:
 	- Significantly reduces the libpmem's stack usage.
+	- Remove references to libfabric.
 
 Tue Aug 8 2023 Oksana Sałyk <oksana.salyk@intel.com>
 
