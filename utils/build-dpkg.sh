@@ -109,7 +109,7 @@ if [ "$EXTRA_CFLAGS_RELEASE" = "" ]; then
 fi
 
 LIBFABRIC_MIN_VERSION=1.4.2
-NDCTL_MIN_VERSION=60.1
+NDCTL_MIN_VERSION=63
 
 function convert_changelog() {
 	while read line
