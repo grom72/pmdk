@@ -244,9 +244,12 @@ define check-cstyle
 endef
 endif
 
+ifeq ($(CHECK_OS),)
 define check-os
 $(CHECK_OS) $(OS_BANNED) $(1) $(2)
 endef
+endif
+
 
 # XXX: to allow gcov tool to connect coverage with source code, we have to
 # use absolute path to source files
