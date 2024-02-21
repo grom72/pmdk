@@ -6,7 +6,7 @@
 # libpmempool_feature/TEST2 -- unit test for PMEMPOOL_FEAT_SHUTDOWN_STATE
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 

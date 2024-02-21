@@ -6,7 +6,7 @@
 # src/test/obj_sds/TEST6 -- unittest for shutdown state
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 

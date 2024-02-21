@@ -9,7 +9,7 @@
 # Alignment variant: replica 0: 2MB, 2MB; replica 1: 4KB, 4KB
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 # XXX Disable tests for all configurations until the issue #5708 is fixed.
 DISABLED

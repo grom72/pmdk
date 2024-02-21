@@ -7,7 +7,7 @@
 # and pmemobj_memset
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 # covered by TEST1

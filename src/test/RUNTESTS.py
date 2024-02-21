@@ -13,11 +13,12 @@ as it implements the fundamental test run workflow.
 
 """
 
-# modules from unittest directory are visible from this script
+# modules from _unittest directory are visible from this script
 import sys
 import os
 from os import path
-sys.path.insert(1, path.abspath(path.join(path.dirname(__file__), 'unittest')))
+sys.path.insert(1, path.abspath(path.join(path.dirname(__file__),
+                                          '_unittest')))
 
 # flake8 issues silenced:
 # E402 - import statements not at the top of the file because of adding

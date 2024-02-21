@@ -6,7 +6,7 @@
 # src/test/util_file_open/TEST0 -- unit test for util_file_open()
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 

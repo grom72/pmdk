@@ -11,7 +11,7 @@
 #                         and missing one recovery file
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 . setup.sh
 

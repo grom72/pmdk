@@ -11,7 +11,7 @@
 # 2. three file-based parts
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 require_fs_type any

@@ -14,7 +14,7 @@
 #                           replica #2 part #0: blocks: offset: 1001 length: 2
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 . setup.sh
 

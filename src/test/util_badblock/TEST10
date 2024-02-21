@@ -8,7 +8,7 @@
 #                                   on a pmem filesystem
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 require_linked_with_ndctl ./util_badblock$EXESUFFIX

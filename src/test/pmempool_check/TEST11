@@ -6,7 +6,7 @@
 # pmempool_check/TEST11 -- test for checking pools with device dax
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 

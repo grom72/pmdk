@@ -6,7 +6,7 @@
 # pmemobjcli/TEST2 -- test for pmemobjcli -p option
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 

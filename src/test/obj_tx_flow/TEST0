@@ -6,7 +6,7 @@
 # src/test/obj_tx_flow/TEST0 -- unit test for transaction flow
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 # this test verifies the correctness of the tx management functions only
 require_test_type medium

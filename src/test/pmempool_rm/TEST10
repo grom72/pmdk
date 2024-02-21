@@ -6,7 +6,7 @@
 # pmempool_rm/TEST10 -- test for pmempool rm in interactive mode
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 require_fs_type any

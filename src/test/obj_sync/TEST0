@@ -11,7 +11,7 @@
 # until these errors are fixed: https://github.com/pmem/pmdk/issues/5646
 # and https://github.com/pmem/pmdk/issues/5727
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 

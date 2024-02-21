@@ -6,7 +6,7 @@
 # libpmempool_feature/TEST0 -- unit test for PMEMPOOL_FEAT_SINGLEHDR
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 

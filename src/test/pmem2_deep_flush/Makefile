@@ -7,7 +7,7 @@
 TOP = ../../..
 
 vpath %.c $(TOP)/src/libpmem2
-vpath %.c $(TOP)/src/test/unittest
+vpath %.c $(TOP)/src/test/_unittest
 
 INCS += -I$(TOP)/src/libpmem2
 

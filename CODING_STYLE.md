@@ -80,9 +80,9 @@ log level for most frequently called routines.
 
 ### Unit tests
 - There **must** be unit tests provided for each new function/module added.
-- Test scripts **must** start with `#!/usr/bin/env <shell>` for portability between Linux and FreeBSD.
+- Test scripts **must** start with `#!/usr/bin/env <shell>`.
 - Please, see [this](https://github.com/pmem/pmdk/blob/master/src/test/README)
-and [that](https://github.com/pmem/pmdk/blob/master/src/test/unittest/README)
+and [that](https://github.com/pmem/pmdk/blob/master/src/test/_unittest/README)
 document to get familiar with
 our test framework and the guidelines on how to write and run unit tests.
 

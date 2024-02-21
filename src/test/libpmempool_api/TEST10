@@ -6,7 +6,7 @@
 # libpmempool_api/TEST10 -- test for checking API
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 

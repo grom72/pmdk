@@ -6,7 +6,7 @@
 # pmempool_inval/TEST0 -- test for pmempool invalid input commands
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 require_fs_type pmem non-pmem

@@ -11,7 +11,7 @@
 include ../common.inc
 
 TEST_DEPS = \
-	unittest\
+	_unittest\
 	tools
 
 OBJ_DEPS = \
@@ -406,5 +406,5 @@ SUPP_SYNC_FILES=$(shell echo *.supp | sed s/supp/$(SYNC_EXT)/g)
 
 .PHONY: all check clean clobber cstyle pcheck pcheck-log pcheck-obj\
 	 pcheck-other pcheck-pmem pcheck-pmempool\
-	 test unittest tools format pcheck-libpmempool pycheck\
+	 test _unittest tools format pcheck-libpmempool pycheck\
 	 pcheck-local $(TESTS_BUILD)

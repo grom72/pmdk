@@ -8,7 +8,7 @@
 #
 TOP = ../../..
 
-vpath %.c $(TOP)/src/test/unittest
+vpath %.c $(TOP)/src/test/_unittest
 
 INCS += -I$(TOP)/src/libpmem2
 TARGET = pmem2_vm_reservation

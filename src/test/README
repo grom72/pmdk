@@ -134,7 +134,7 @@ DETAILS ON HOW TO WRITE UNIT TESTS
 
 A minimal unit test consists of a sub-directory here with an executable called
 TEST0 in it that exits normally when the test passes.  Most tests, however,
-source the file unittest/unittest.sh to use the utility functions for setting
+source the file _unittest/unittest.sh to use the utility functions for setting
 up and checking tests.  Additionally, most unit tests build a local test
 program and call it from the TEST* scripts.
 
@@ -233,7 +233,7 @@ The above call is just like calling open(2), expect the framework checks for
 unexpected errors and halts the unit test if those happen.  The result is
 usually a very short, compact unit test where most of the code is the
 interesting code under test.  A full list of unit test macros is in
-unittest/inittest.h.
+_unittest/inittest.h.
 
 The best way to create a new unit test is to start with an existing one.  The
 test:

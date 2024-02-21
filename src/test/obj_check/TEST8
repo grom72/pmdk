@@ -6,7 +6,7 @@
 # src/test/obj_check/TEST8 -- unit test for pmemobj_check
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 

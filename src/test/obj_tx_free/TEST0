@@ -6,7 +6,7 @@
 # src/test/obj_tx_free/TEST0 -- unit test for pmemobj_tx_free
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 

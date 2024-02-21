@@ -7,7 +7,7 @@
 #	(medium non-helgrind/drd version)
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 # XXX disable the test until https://github.com/pmem/pmdk/issues/5726 is fixed.
 DISABLED

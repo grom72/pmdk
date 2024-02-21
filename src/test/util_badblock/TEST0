@@ -8,7 +8,7 @@
 #                                   on a non-pmem filesystem
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 

@@ -6,7 +6,7 @@
 # pmempool_info/TEST27 -- test for arch string inside info
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 

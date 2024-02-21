@@ -5,7 +5,7 @@
 # src/test/pmem2_mem_ext/Makefile -- build pmem2_mem_ext test
 #
 TOP = ../../..
-vpath %.c $(TOP)/src/test/unittest
+vpath %.c $(TOP)/src/test/_unittest
 INCS += -I$(TOP)/src/libpmem2
 
 TARGET = pmem2_mem_ext

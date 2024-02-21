@@ -8,7 +8,7 @@
 # as the most critical and full reorder engine for other parts of the code.
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_fs_type pmem non-pmem
 require_build_type debug

@@ -6,7 +6,7 @@
 # src/test/obj_heap/TEST1 -- unit test for inject fault malloc
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 set_test_labels fault_injection

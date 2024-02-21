@@ -9,7 +9,7 @@
 # disabling reordering of API functions
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_fs_type pmem non-pmem
 require_build_type debug

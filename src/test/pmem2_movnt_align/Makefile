@@ -5,7 +5,7 @@
 # src/test/pmem2_movnt_align/Makefile -- build pmem2_movnt_align test
 #
 TOP = ../../..
-vpath %.c $(TOP)/src/test/unittest
+vpath %.c $(TOP)/src/test/_unittest
 INCS += -I$(TOP)/src/libpmem2
 
 TARGET = pmem2_movnt_align

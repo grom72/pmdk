@@ -6,7 +6,7 @@
 # src/test/obj_recovery/TEST3 -- unit test for pool recovery
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 require_no_asan

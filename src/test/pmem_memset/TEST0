@@ -6,7 +6,7 @@
 # src/test/pmem_memset/TEST0 -- unit test for pmem_memset
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 

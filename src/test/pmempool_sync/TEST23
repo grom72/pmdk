@@ -9,7 +9,7 @@
 # Ref: pmem/issues#730
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 require_fs_type any

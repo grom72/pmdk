@@ -6,7 +6,7 @@
 # pmempool_help/TEST1 -- test for pmempool help
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 

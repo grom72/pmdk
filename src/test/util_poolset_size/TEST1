@@ -10,7 +10,7 @@
 # This test is equivalent of TEST0 for ppc64le platform.
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 

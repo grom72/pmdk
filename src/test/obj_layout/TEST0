@@ -6,7 +6,7 @@
 # src/test/obj_layout/TEST0 -- unit test for obj_layout interface
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type short
 

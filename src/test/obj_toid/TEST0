@@ -6,7 +6,7 @@
 # src/test/obj_toid/TEST0 -- unit test for obj_toid
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 

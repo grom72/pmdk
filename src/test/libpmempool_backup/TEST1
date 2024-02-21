@@ -6,7 +6,7 @@
 # libpmempool_backup/TEST1 -- test non-existing backup poolset
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 

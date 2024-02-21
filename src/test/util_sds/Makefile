@@ -5,7 +5,7 @@
 # src/test/util_sds/Makefile -- shutdown_tests unit test
 #
 TOP = ../../..
-vpath %.c $(TOP)/src/test/unittest/
+vpath %.c $(TOP)/src/test/_unittest/
 vpath %.c $(TOP)/src/common/
 
 TARGET = util_sds

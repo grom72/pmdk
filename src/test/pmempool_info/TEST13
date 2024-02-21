@@ -6,7 +6,7 @@
 # pmempool_info/TEST13 -- test for info command
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 

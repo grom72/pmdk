@@ -6,7 +6,7 @@
 #
 TOP = ../../..
 
-vpath %.c $(TOP)/src/test/unittest
+vpath %.c $(TOP)/src/test/_unittest
 
 TARGET = pmem2_integration
 OBJS = pmem2_integration.o\
