@@ -18,6 +18,7 @@ header: "pmemobj API version 2.3"
 [DESCRIPTION](#description)<br />
 [RETURN VALUE](#return-value)<br />
 [ERRORS](#errors)<br />
+[DEFAULT LOGGING FUNCTION](#default-logging-function)<br />
 [SEE ALSO](#see-also)<br />
 
 # NAME #
@@ -36,13 +37,12 @@ header: "pmemobj API version 2.3"
 		PMEMOBJ_LOG_LEVEL_WARNING,
 		PMEMOBJ_LOG_LEVEL_NOTICE,
 		PMEMOBJ_LOG_LEVEL_INFO,
-		PMEMOBJ_LOG_LEVEL_DEBUG,
+		PMEMOBJ_LOG_LEVEL_DEBUG
 	};
 
 	enum pmemobj_log_threshold {
 		PMEMOBJ_LOG_THRESHOLD,
-		PMEMOBJ_LOG_THRESHOLD_AUX,
-		PMEMOBJ_LOG_THRESHOLD_MAX,
+		PMEMOBJ_LOG_THRESHOLD_AUX
 	};
 
 	int pmemobj_log_set_threshold(enum pmemobj_log_threshold threshold,
@@ -56,19 +56,20 @@ header: "pmemobj API version 2.3"
 Available thresholds are:
 
  - **PMEMOBJ_LOG_THRESHOLD** - the main threshold used to filter out undesired
-  logging messages. Messages on a higher level than the primary threshold
-  value are ignored. **PMEMOBJ_LOG_LEVEL_HARK** shall be used to suppress
+  logging messages. Messages with a lower severity than the primary threshold
+  value are ignored. The initial value is **PMEMOBJ_LOG_WARNING**.
+  **PMEMOBJ_LOG_LEVEL_HARK** shall be used to suppress
   logging except for the basic library info. Please see the
   **PMEMOBJ_LOG_LEVEL_HARK** for details.
-  The default value is **PMEMOBJ_LOG_WARNING**.
- - **PMEMOBJ_LOG_THRESHOLD_AUX** - the auxiliary threshold intended for use inside
-  the logging function (please see **pmemobj_log_get_threshold**(3)). A custom
-  logging function may or may not take this threshold into consideration depending
-  on the developer's needs. For the default logging function behaviour please see
-  **pmemobj_log_set_function**(3). The initial value of this threshold is
-  **PMEMOBJ_LOG_LEVEL_HARK**.
 
-Available threshold values are defined by enum *pmemobj_log_level*:
+ - **PMEMOBJ_LOG_THRESHOLD_AUX** - the auxiliary threshold intended for use inside
+  the logging function (please see **pmemobj_log_get_threshold**(3)).
+  The initial value of this threshold is **PMEMOBJ_LOG_LEVEL_HARK**.
+
+  The **pmemobj_log_set_threshold**() function controls by default tresholds of the built-in logging function.
+  Please see [DEFAULT LOGGING FUNCTION](#default-logging-function) for details.
+
+Available threshold values are defined by enum *pmemobj_log_level* (sorted from the highiest to the lowest severity):
 
  - **PMEMOBJ_LOG_LEVEL_HARK** - only basic library info. It is used just for
    a few messages when the program is started and whenever a new logging function
@@ -98,6 +99,15 @@ a non-zero value and sets errno on failure. On failure, the *threshold* value re
  - EAGAIN - multiple threads attempted to change the *threshold* value concurrently.
    A retry may fix the problem. This error is not expected when the function is
    called from just one thread at a time.
+
+# DEFAULT LOGGING FUNCTION #
+The library provides the default logging function which writes messages to
+**syslog**(3) and to **stderr**(3). This function is enabled during library initialization and can
+be restored using **pmemobj_log_set_function**(3) with **PMEMOBJ_LOG_USE_DEFAULT_FUNCTION** value as the *log_function*
+argument.
+**PMEMOBJ_LOG_THRESHOLD** threshold is used to filter out undesired logging messages for both **syslog**(3) and **stderr**(3).
+**PMEMOBJ_LOG_THRESHOLD_AUX** threshold is used to filter out undesired logging messages for **stderr**(3).
+Messages with **PMEMOBJ_LOG_LEVEL_HARK** severity are never written to stderr.
 
 # SEE ALSO #
 

@@ -53,4 +53,4 @@ In case of failure, the *threshold* value is undefined.
 
 # SEE ALSO #
 
-**pmemobj_log_set_function**(3), **pmemobj_log_set_threshold**(3).
+**pmemobj_log_set_threshold**(3), **pmemobj_log_set_function**(3).

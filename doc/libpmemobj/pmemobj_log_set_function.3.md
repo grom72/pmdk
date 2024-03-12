@@ -16,7 +16,7 @@ header: "pmemobj API version 2.3"
 [NAME](#name)<br />
 [SYNOPSIS](#synopsis)<br />
 [DESCRIPTION](#description)<br />
-[THE DEFAULT LOGGING FUNCTION](#the-default-logging-function)<br />
+[DEFAULT LOGGING FUNCTION](#default-logging-function)<br />
 [RETURN VALUE](#return-value)<br />
 [ERRORS](#errors)<br />
 [NOTE](#note)<br />
@@ -50,7 +50,7 @@ the generated logging messages. The *log_function* can be either
 
 The parameters of a user-defined log function are as follows:
 
-- *level* - the log level of the message (see **pmemobj_log_set_threshold**(3))
+- *level* - the log level of the message (message severity) (see **pmemobj_log_set_threshold**(3))
 - *file_name* - name of the source file where the message coming from.
   It could be set to NULL and in such case, neither *line_no* nor *function_name*
   are provided.
@@ -58,13 +58,10 @@ The parameters of a user-defined log function are as follows:
  - *function_name* - the function name where the message coming from
  - *message* - the message string
 
-# THE DEFAULT LOGGING FUNCTION #
+# DEFAULT LOGGING FUNCTION #
 
 The library provides the default logging function which writes messages to
-**syslog**(3) (the primary destination) and to **stderr**(3) (the secondary
-destination). This function is enabled during library initialization and can
-be restored using **PMEMOBJ_LOG_USE_DEFAULT_FUNCTION** value as the *log_function*
-argument.
+**syslog**(3) and to **stderr**(3). Please see **pmemobj_log_set_threshold**(3) for details.
 
 # RETURN VALUE #
 
@@ -82,13 +79,13 @@ function remains unchanged.
 
 # NOTE #
 
-The logging messages on the levels above the **PMEMOBJ_LOG_THRESHOLD** level won't
+The logging messages on the severity below the **PMEMOBJ_LOG_THRESHOLD** level won't
 trigger the logging function.
 
 The user defined function must be thread-safe.
 
 The library will call user defined function before returning from **pmemobj_log_set_function**()
-to deliver basic information about the library:
+to deliver basic information about the library as listed below:
 
  - "src version: 2.y.z"
  - "compiled with support for shutdown state"
@@ -96,4 +93,4 @@ to deliver basic information about the library:
 
 # SEE ALSO #
 
-**pmemobj_log_get_threshold**(3), **pmemobj_log_set_threshold**(3).
+**pmemobj_log_set_threshold**(3), **pmemobj_log_get_threshold**(3).
