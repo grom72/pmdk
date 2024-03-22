@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2021, Intel Corporation
+# Copyright 2020-2024, Intel Corporation
 
 #
 # src/test/pmem2_badblock/Makefile -- build pmem2_badblock test

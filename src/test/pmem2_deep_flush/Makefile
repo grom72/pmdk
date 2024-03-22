@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2020, Intel Corporation
+# Copyright 2020-2024, Intel Corporation
 
 #
 # src/test/pmem2_deep_flush/Makefile -- build pmem2_deep_flush test

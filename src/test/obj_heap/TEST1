@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2019-2023, Intel Corporation
+# Copyright 2019-2024, Intel Corporation
 
 #
 # src/test/obj_heap/TEST1 -- unit test for inject fault malloc

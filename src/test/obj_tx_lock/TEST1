@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2019, Intel Corporation
+# Copyright 2019-2024, Intel Corporation
 
 #
 # src/test/obj_tx_lock/TEST1 -- unit test for pmemobj_tx_lock() with DRD

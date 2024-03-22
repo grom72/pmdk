@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2017-2019, Intel Corporation
+# Copyright 2017-2024, Intel Corporation
 
 #
 # src/test/obj_sync/TEST8 -- unit test for PMEM-resident locks

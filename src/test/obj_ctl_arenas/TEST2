@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2019, Intel Corporation
+# Copyright 2019-2024, Intel Corporation
 
 #
 # src/test/obj_ctl_arenas/TEST2 -- unit test for create arenas using ctl

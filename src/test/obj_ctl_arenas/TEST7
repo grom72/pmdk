@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2021, Intel Corporation
+# Copyright 2021-2024, Intel Corporation
 
 #
 # src/test/obj_ctl_arenas/TEST7 -- test for global arena type assignment

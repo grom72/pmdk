@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2022-2023, Intel Corporation
+# Copyright 2022-2024, Intel Corporation
 #
 #
 # pmempool_inval/TEST0 -- test for pmempool invalid input commands
