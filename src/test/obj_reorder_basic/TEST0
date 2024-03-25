@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2018-2019, Intel Corporation
+# Copyright 2018-2024, Intel Corporation
 
 #
 # src/test/obj_reorder_basic/TEST0 -- unit test for the reordering script
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 # it doesn't make sense to run in local directory
 require_fs_type pmem non-pmem

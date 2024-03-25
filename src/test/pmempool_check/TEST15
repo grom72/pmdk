@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2016-2023, Intel Corporation
+# Copyright 2016-2024, Intel Corporation
 #
 #
 # pmempool_check/TEST15 -- test for checking poolset with valid parts but with
 #	invalid links
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 

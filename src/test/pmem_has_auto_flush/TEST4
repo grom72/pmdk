@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2018-2019, Intel Corporation
+# Copyright 2018-2024, Intel Corporation
 
 #
 # src/test/pmem_has_auto_flush/TEST4 -- unit test for pmem_has_auto_flush
 #
 # tests regions with empty persistence_domain file inside
 #
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 require_fs_type pmem non-pmem

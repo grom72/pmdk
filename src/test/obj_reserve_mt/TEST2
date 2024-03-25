@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2023, Intel Corporation
+# Copyright 2023-2024, Intel Corporation
 
 #
 # src/test/obj_reserve_mt/TEST2 -- multithreaded allocator test
 #	(medium helgrind version)
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_fs_type pmem non-pmem
 require_test_type medium

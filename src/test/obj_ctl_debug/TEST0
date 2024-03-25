@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2018-2019, Intel Corporation
+# Copyright 2018-2024, Intel Corporation
 
 #
 # src/test/obj_ctl_debug/TEST0 -- unit test (short) without memcheck and
 #       and pmemcheck for ctl_debug
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type short
 require_fs_type any

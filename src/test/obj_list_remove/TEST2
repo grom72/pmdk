@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2015-2019, Intel Corporation
+# Copyright 2015-2024, Intel Corporation
 
 #
 # src/test/obj_list_remove/TEST2 -- unit test for list_remove
@@ -8,7 +8,7 @@
 # Add 3 elements to single list and remove one element from the middle.
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 require_build_type debug

@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2020, Intel Corporation
+# Copyright 2020-2024, Intel Corporation
 
 #
 # src/test/pmem2_memcpy/Makefile -- build pmem2_memcpy test
 #
 TOP = ../../..
-vpath %.c $(TOP)/src/test/unittest
+vpath %.c $(TOP)/src/test/_unittest
 INCS += -I$(TOP)/src/libpmem2
 
 TARGET = pmem2_memcpy

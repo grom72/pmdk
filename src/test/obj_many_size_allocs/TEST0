@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2015-2023, Intel Corporation
+# Copyright 2015-2024, Intel Corporation
 #
 # Copyright (c) 2016, Microsoft Corporation. All rights reserved.
 #
@@ -34,7 +34,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type long
 

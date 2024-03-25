@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2020, Intel Corporation
+# Copyright 2020-2024, Intel Corporation
 
 #
 # src/test/pmem2_badblock_mocks/Makefile --
@@ -7,7 +7,7 @@
 #
 
 TOP = ../../..
-vpath %.c $(TOP)/src/test/unittest
+vpath %.c $(TOP)/src/test/_unittest
 
 TARGET = pmem2_badblock_mocks
 

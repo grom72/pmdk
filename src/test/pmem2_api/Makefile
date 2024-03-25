@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2019-2020, Intel Corporation
+# Copyright 2019-2024, Intel Corporation
 
 #
 # src/test/pmem2_integration/Makefile -- build pmem2_integration test
 #
 TOP = ../../..
 
-vpath %.c $(TOP)/src/test/unittest
+vpath %.c $(TOP)/src/test/_unittest
 
 TARGET = pmem2_api
 OBJS = pmem2_api.o\

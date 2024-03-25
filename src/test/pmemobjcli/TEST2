@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2018, Intel Corporation
+# Copyright 2018-2024, Intel Corporation
 #
 #
 # pmemobjcli/TEST2 -- test for pmemobjcli -p option
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 

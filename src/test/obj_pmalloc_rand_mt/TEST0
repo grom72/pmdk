@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2017-2023, Intel Corporation
+# Copyright 2017-2024, Intel Corporation
 
 #
 # src/test/obj_pmalloc_rand_mt/TEST0 -- multithreaded allocator test
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_fs_type pmem
 require_test_type long

@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2015-2018, Intel Corporation
+# Copyright 2015-2024, Intel Corporation
 #
 #
 # pmempool_rm/TEST5 -- test for pmempool rm
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 

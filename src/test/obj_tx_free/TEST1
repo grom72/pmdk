@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2015-2019, Intel Corporation
+# Copyright 2015-2024, Intel Corporation
 
 #
 # src/test/obj_tx_free/TEST1 -- unit test for pmemobj_tx_free with
 # valgrind pmemcheck tool
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2018-2019, Intel Corporation
+# Copyright 2018-2024, Intel Corporation
 
 #
 # src/test/pmem_has_auto_flush/TEST6 -- unit test for pmem_has_auto_flush
@@ -8,7 +8,7 @@
 # test regions with proper value in all persistence_domain files
 # this is the only case when pmem_has_auto_flush should return 1
 #
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 require_fs_type pmem non-pmem

@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2016-2018, Intel Corporation
+# Copyright 2016-2024, Intel Corporation
 #
 #
 # pmempool_transform/TEST7 -- test for checking pmempool transform;
 #                             add replica with dax device
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 require_dax_devices 1

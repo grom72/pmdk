@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2014-2023, Intel Corporation
+# Copyright 2014-2024, Intel Corporation
 #
 #
 # pmempool_check/TEST17 -- test for limit checksum generation to check run with
 #	advanced repair flag
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 

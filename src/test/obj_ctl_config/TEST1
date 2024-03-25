@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2017-2019, Intel Corporation
+# Copyright 2017-2024, Intel Corporation
 
 export UNITTEST_NAME=obj_ctl_config/TEST1
 export UNITTEST_NUM=100 # TEST0 poses as different test numbers
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type short
 

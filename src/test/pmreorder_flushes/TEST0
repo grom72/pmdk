@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2019, Intel Corporation
+# Copyright 2019-2024, Intel Corporation
 
 #
 # src/test/pmreorder_flushes/TEST0 -- test for the reordering script
@@ -8,7 +8,7 @@
 # variable can be overwrite in the next barrier and then persisted properly.
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_fs_type pmem non-pmem
 require_build_type debug

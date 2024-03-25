@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2018-2019, Intel Corporation
+# Copyright 2018-2024, Intel Corporation
 #
 #
 # daxio/TEST3 -- test for daxio utility; exactly the same as TEST0,
 #                but using various size units (KB, KiB, K, B, ...)
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 require_fs_type any

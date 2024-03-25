@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2015-2022, Intel Corporation
+# Copyright 2015-2024, Intel Corporation
 
 #
 # src/test/pmem_movnt/TEST0 -- unit test for pmem_memcpy, pmem_memmove
 #                              and pmem_memset
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 

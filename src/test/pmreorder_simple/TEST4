@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2018-2019, Intel Corporation
+# Copyright 2018-2024, Intel Corporation
 
 #
 # src/test/pmreorder_simple/TEST4 -- unit test for the reordering script
@@ -8,7 +8,7 @@
 # the most critical and full reorder engine for other parts of the code.
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_fs_type pmem non-pmem
 require_build_type debug

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2017-2018, Intel Corporation
+# Copyright 2017-2024, Intel Corporation
 #
 #
 # pmempool_sync/TEST22 -- test for pmempool sync with directories
@@ -10,7 +10,7 @@
 # Similar to: TEST0 + SINGLEHDR + directories
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 

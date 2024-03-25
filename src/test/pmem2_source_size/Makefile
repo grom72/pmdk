@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2019-2020, Intel Corporation
+# Copyright 2019-2024, Intel Corporation
 
 #
 # src/test/pmem2_source_size/Makefile -- build pmem2_source_size unit test
 #
 TOP = ../../..
 
-vpath %.c $(TOP)/src/test/unittest
+vpath %.c $(TOP)/src/test/_unittest
 vpath %.c $(TOP)/src/libpmem2
 
 INCS += -I$(TOP)/src/libpmem2

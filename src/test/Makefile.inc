@@ -23,7 +23,7 @@ EX_LIBPMEM2=$(EXAMPLES_DIR)/libpmem2
 EX_LIBPMEMOBJ=$(EXAMPLES_DIR)/libpmemobj
 EX_PMREORDER=$(EXAMPLES_DIR)/pmreorder
 
-UT = ../unittest/libut.a
+UT = ../_unittest/libut.a
 LIBS += $(UT) $(LIBUUID)
 
 ifeq ($(USE_LIBUNWIND),y)
@@ -457,7 +457,7 @@ extract_funcs = $(shell \
         print "-Wl,--wrap=" $$2 \
     }' $(1) )
 
-INCS += -I../unittest -I$(TOP)/src/include -I$(TOP)/src/common -I$(TOP)/src/core
+INCS += -I../_unittest -I$(TOP)/src/include -I$(TOP)/src/common -I$(TOP)/src/core
 
 COMMON_FLAGS  = -ggdb
 COMMON_FLAGS += -Wall
@@ -588,7 +588,7 @@ endif
 all: $(TARGET) $(TARGET_STATIC_DEBUG) $(TARGET_STATIC_NONDEBUG)
 
 $(UT):
-	$(MAKE) -C ../unittest
+	$(MAKE) -C ../_unittest
 
 $(TARGET_STATIC_DEBUG): $(TMP_HEADERS) $(OBJS) $(UT) $(STATIC_DEBUG_LIBS) $(EXTRA_DEPS) $(MAKEFILE_DEPS)
 	$(LINKER) -o $@ $(LDFLAGS) $(OBJS) $(STATIC_DEBUG_LIBS) $(LIBS)

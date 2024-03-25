@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2015-2023, Intel Corporation
+# Copyright 2015-2024, Intel Corporation
 #
 
 #
 # src/test/out_err_mt/TEST2 -- unit test for error messages
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 require_fs_type any

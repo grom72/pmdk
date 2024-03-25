@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2015-2019, Intel Corporation
+# Copyright 2015-2024, Intel Corporation
 
 #
 # src/test/obj_list_valgrind/TEST0 -- unit test for list module with valgrind
 # pmemcheck tool
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 

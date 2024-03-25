@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2018-2023, Intel Corporation
+# Copyright 2018-2024, Intel Corporation
 #
 
 #
 # src/test/util_ravl/TEST0 -- unit test for util_ravl interface
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_fs_type none
 set_test_labels fault_injection

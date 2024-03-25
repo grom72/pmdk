@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2018-2019, Intel Corporation
+# Copyright 2018-2024, Intel Corporation
 
 #
 # src/test/ex_pmreorder/TEST0 -- test for pmreorder list example
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 LIBPMEM_SO=${PMDK_LIB_PATH}/libpmem.so.1
 

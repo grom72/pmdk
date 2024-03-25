@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2015-2020, Intel Corporation
+# Copyright 2015-2024, Intel Corporation
 
 #
 # src/test/util_sds/Makefile -- shutdown_tests unit test
 #
 TOP = ../../..
-vpath %.c $(TOP)/src/test/unittest/
+vpath %.c $(TOP)/src/test/_unittest/
 vpath %.c $(TOP)/src/common/
 
 TARGET = util_sds

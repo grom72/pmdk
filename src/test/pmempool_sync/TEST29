@@ -6,7 +6,7 @@
 # pmempool_sync/TEST29 -- test for sync using the 'obj_verify' tool
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 require_fs_type any

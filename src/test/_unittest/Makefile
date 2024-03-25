@@ -2,7 +2,7 @@
 # Copyright 2014-2024, Intel Corporation
 
 #
-# src/test/unittest/Makefile -- build unittest support library
+# src/test/_unittest/Makefile -- build unittest support library
 #
 
 TOP := $(dir $(lastword $(MAKEFILE_LIST)))../../..

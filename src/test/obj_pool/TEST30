@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2017-2019, Intel Corporation
+# Copyright 2017-2024, Intel Corporation
 #
 # Copyright (c) 2016, Microsoft Corporation. All rights reserved.
 #
@@ -38,7 +38,7 @@
 # src/test/obj_pool/TEST30 -- create a pool with the smallest parts possible
 #
 
-. ../unittest/unittest.sh
+. ../_unittest/unittest.sh
 
 require_test_type medium
 
