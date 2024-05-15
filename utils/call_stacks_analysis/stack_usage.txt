@@ -105,8 +105,6 @@
 128 prealloc : src/nondebug/libpmemobj/pmalloc.su:pmalloc.c dynamic,bounded
 128 pmalloc : src/nondebug/libpmemobj/pmalloc.su:pmalloc.c dynamic,bounded
 128 palloc_reservation_create : src/nondebug/libpmemobj/palloc.su:palloc.c dynamic,bounded
-128 memmove_mov_avx512f_fw : src/nondebug/libpmem/memcpy_t_avx512f.su:memcpy_t_avx512f.c static
-128 memmove_mov_avx512f_bw : src/nondebug/libpmem/memcpy_t_avx512f.su:memcpy_t_avx512f.c static
 128 memblock_from_offset_opt : src/nondebug/libpmemobj/memblock.su:memblock.c static
 128 heap_reclaim_zone_garbage : src/nondebug/libpmemobj/heap.su:heap.c static
 128 heap_reclaim_run : src/nondebug/libpmemobj/heap.su:heap.c dynamic,bounded
@@ -837,11 +835,6 @@
 16 obj_msync_nofail : src/nondebug/libpmemobj/obj.su:obj.c static
 16 obj_msync_nofail.part.4 : src/nondebug/libpmemobj/obj.su:obj.c static
 16 obj_fini : src/nondebug/libpmemobj/obj.su:obj.c static
-16 memmove_mov_avx512f_noflush : src/nondebug/libpmem/memcpy_t_avx512f.su:memcpy_t_avx512f.c static
-16 memmove_mov_avx512f_empty : src/nondebug/libpmem/memcpy_t_avx512f.su:memcpy_t_avx512f.c static
-16 memmove_mov_avx512f_clwb : src/nondebug/libpmem/memcpy_t_avx512f.su:memcpy_t_avx512f.c static
-16 memmove_mov_avx512f_clflush : src/nondebug/libpmem/memcpy_t_avx512f.su:memcpy_t_avx512f.c static
-16 memmove_mov_avx512f_clflushopt : src/nondebug/libpmem/memcpy_t_avx512f.su:memcpy_t_avx512f.c static
 16 memblock_rebuild_state : src/nondebug/libpmemobj/memblock.su:memblock.c static
 16 memblock_header_legacy_get_size : src/nondebug/libpmemobj/memblock.su:memblock.c static
 16 memblock_header_legacy_get_flags : src/nondebug/libpmemobj/memblock.su:memblock.c static
@@ -1078,9 +1071,6 @@
 8 pmem_drain : src/nondebug/libpmem/pmem.su:pmem.c static
 8 pmem_deep_flush : src/nondebug/libpmem/pmem.su:pmem.c static
 8 pmem_deep_drain : src/nondebug/libpmem/pmem.su:pmem.c static
-8 pmem_clwb : src/nondebug/libpmem/memcpy_t_avx512f.su:flush.h static
-8 pmem_clflush : src/nondebug/libpmem/memcpy_t_avx512f.su:flush.h static
-8 pmem_clflushopt : src/nondebug/libpmem/memcpy_t_avx512f.su:flush.h static
 8 pmem2_region_get_next_badblock : src/nondebug/libpmemobj/badblocks_ndctl.su:badblocks_ndctl.c static
 8 pmem2_region_get_next_badblock : src/nondebug/common/badblocks_ndctl.su:badblocks_ndctl.c static
 8 pmem2_region_get_first_badblock : src/nondebug/libpmemobj/badblocks_ndctl.su:badblocks_ndctl.c static
@@ -1321,8 +1311,6 @@
 8 obj_norep_memcpy : src/nondebug/libpmemobj/obj.su:obj.c static
 8 obj_norep_drain : src/nondebug/libpmemobj/obj.su:obj.c static
 8 obj_drain_empty : src/nondebug/libpmemobj/obj.su:obj.c static
-8 noflush : src/nondebug/libpmem/memcpy_t_avx512f.su:memcpy_memset.h static
-8 noflush64b : src/nondebug/libpmem/memcpy_t_avx512f.su:memcpy_memset.h static
 8 memset_mov_sse2_noflush : src/nondebug/libpmem/memset_t_sse2.su:memset_t_sse2.c static
 8 memset_mov_sse2_empty : src/nondebug/libpmem/memset_t_sse2.su:memset_t_sse2.c static
 8 memset_mov_sse2_clwb : src/nondebug/libpmem/memset_t_sse2.su:memset_t_sse2.c static
@@ -1379,6 +1367,11 @@
 8 memmove_mov_avx_clwb : src/nondebug/libpmem/memcpy_t_avx.su:memcpy_t_avx.c static
 8 memmove_mov_avx_clflush : src/nondebug/libpmem/memcpy_t_avx.su:memcpy_t_avx.c static
 8 memmove_mov_avx_clflushopt : src/nondebug/libpmem/memcpy_t_avx.su:memcpy_t_avx.c static
+8 memmove_mov_avx512f_noflush : src/nondebug/libpmem/memcpy_t_avx512f.su:memcpy_t_avx512f.c static
+8 memmove_mov_avx512f_empty : src/nondebug/libpmem/memcpy_t_avx512f.su:memcpy_t_avx512f.c static
+8 memmove_mov_avx512f_clwb : src/nondebug/libpmem/memcpy_t_avx512f.su:memcpy_t_avx512f.c static
+8 memmove_mov_avx512f_clflush : src/nondebug/libpmem/memcpy_t_avx512f.su:memcpy_t_avx512f.c static
+8 memmove_mov_avx512f_clflushopt : src/nondebug/libpmem/memcpy_t_avx512f.su:memcpy_t_avx512f.c static
 8 memblock_header_none_write : src/nondebug/libpmemobj/memblock.su:memblock.c static
 8 memblock_header_none_reinit : src/nondebug/libpmemobj/memblock.su:memblock.c static
 8 memblock_header_none_invalidate : src/nondebug/libpmemobj/memblock.su:memblock.c static
@@ -1415,14 +1408,9 @@
 8 hash64 : src/nondebug/libpmemobj/rand.su:rand.c static
 8 hash64 : src/nondebug/common/rand.su:rand.c static
 8 flush_empty : src/nondebug/libpmem/pmem.su:pmem.c static
-8 flush_empty_nolog : src/nondebug/libpmem/memcpy_t_avx512f.su:pmem2_arch.h static
 8 flush_clwb : src/nondebug/libpmem/init.su:init.c static
-8 flush_clwb_nolog : src/nondebug/libpmem/memcpy_t_avx512f.su:flush.h static
 8 flush_clflush : src/nondebug/libpmem/init.su:init.c static
 8 flush_clflushopt : src/nondebug/libpmem/init.su:init.c static
-8 flush_clflushopt_nolog : src/nondebug/libpmem/memcpy_t_avx512f.su:flush.h static
-8 flush_clflush_nolog : src/nondebug/libpmem/memcpy_t_avx512f.su:flush.h static
-8 flush64b_empty : src/nondebug/libpmem/memcpy_t_avx512f.su:flush.h static
 8 fence_empty : src/nondebug/libpmem/pmem.su:pmem.c static
 8 debug_ctl_register : src/nondebug/libpmemobj/ctl_debug.su:ctl_debug.c static
 8 ctl__worker_read : src/nondebug/libpmemobj/tx.su:tx.c static
