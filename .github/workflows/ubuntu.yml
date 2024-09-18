@@ -8,6 +8,9 @@ env:
   GITHUB_REPO: pmem/pmdk
   DOCKER_REPO: ghcr.io/pmem/pmdk
 
+permissions:
+  contents: read
+
 jobs:
   linux:
     name: Linux

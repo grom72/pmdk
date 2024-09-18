@@ -19,6 +19,9 @@ env:
   PMDK_CXX:       g++
   SRC_CHECKERS:   0
 
+permissions:
+  contents: read
+
 jobs:
   in-tree:
     name: In-tree
