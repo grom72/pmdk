@@ -10,8 +10,7 @@ on:
         type: string
         default: master
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   prep_runtime:

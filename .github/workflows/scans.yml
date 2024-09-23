@@ -7,8 +7,7 @@ on:
     # run this job at 00:00 UTC every day
     - cron:  '0 0 * * *'
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   call-bandit:

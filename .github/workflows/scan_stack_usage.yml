@@ -8,8 +8,7 @@ on:
 env:
   CALL_STACKS_TOOLS_PATH: pmdk/utils/call_stacks_analysis
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   stack-usage:

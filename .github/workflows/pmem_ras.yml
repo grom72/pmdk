@@ -30,8 +30,7 @@ on:
     # run this job every 8 hours
     - cron:  '0 */8 * * *'
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   linux:

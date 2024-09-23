@@ -17,8 +17,7 @@ on:
         type: number
         default: 360 # The jobs.<job_id>.timeout-minutes default.
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   job:

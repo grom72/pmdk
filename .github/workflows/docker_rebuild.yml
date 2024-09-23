@@ -23,8 +23,7 @@ env:
   WORKDIR:     utils/docker
   PUSH_IMAGE:  1
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   image:

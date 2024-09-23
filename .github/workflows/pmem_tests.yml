@@ -9,8 +9,7 @@ on:
     # run this job at 18:00 UTC every day
     - cron:  '0 18 * * *'
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   # Test the default build with the basic test suite.

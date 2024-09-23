@@ -24,8 +24,7 @@ env:
   TEST_BUILD:   debug
   FAULT_INJECTION: 1
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   linux:

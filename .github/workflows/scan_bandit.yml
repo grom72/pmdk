@@ -9,8 +9,7 @@ env:
   PMREORDER: src/tools/pmreorder/*.py
   CALL_STACKS_ANALYSIS: utils/call_stacks_analysis/*.py
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   bandit:

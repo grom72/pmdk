@@ -21,8 +21,7 @@ env:
   VALGRIND:     1
   COVERITY:     1
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   linux:
