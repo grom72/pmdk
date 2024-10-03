@@ -16,6 +16,10 @@ jobs:
   call-codeql:
     uses: ./.github/workflows/scan_codeql.yml
     name: CodeQL
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
   call-coverity:
     uses: ./.github/workflows/scan_coverity.yml
     secrets:
