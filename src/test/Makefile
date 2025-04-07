@@ -38,6 +38,7 @@ OBJ_TESTS = \
 	obj_ctl_config\
 	obj_ctl_debug\
 	obj_ctl_heap_size\
+	obj_ctl_pop_fsync\
 	obj_ctl_stats\
 	obj_debug\
 	obj_defrag\
